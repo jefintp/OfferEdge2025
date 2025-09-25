@@ -1,0 +1,31 @@
+{% extends 'base_logged_in.html' %}
+{% load custom_filters %}
+{% block title %}Quotes for {{ requirement.title }} | OfferEdge{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto mt-10">
+  <h2 class="text-2xl font-bold text-gray-800 mb-4">Quotes for: {{ requirement.title }}</h2>
+  <p class="text-gray-600 mb-6">{{ requirement.description }}</p>
+
+  {% if quotes %}
+    <ul class="space-y-4">
+      {% for quote in quotes %}
+        <li class="bg-white p-4 rounded shadow">
+          <p>💰 Price: ₹{{ quote.price }}</p>
+          <p>📦 Timeline: {{ quote.deliveryTimeline }}</p>
+          <p>📝 Notes: {{ quote.notes }}</p>
+          <p class="text-xs text-gray-400">Placed by: {{ quote.seller_id }} on {{ quote.createdon }}</p>
+
+          {% if chat_enabled_map|get_item:quote.id %}
+            <a href="/chat/{{ quote.id }}" class="text-blue-600 hover:underline mt-2 inline-block">
+              💬 Start Negotiation
+            </a>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-gray-600">No quotes have been placed yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

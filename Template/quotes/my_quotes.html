@@ -1,0 +1,9 @@
+{% extends 'base_logged_in.html' %}
+{% block content %}
+<h2>My Quotes</h2>
+<ul>
+  {% for quote in quotes %}
+    <li>₹{{ quote.price }} - {{ quote.deliveryTimeline }}</li>
+  {% endfor %}
+</ul>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends 'base_logged_in.html' %}
+{% block title %}Explore Requirements | OfferEdge{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto mt-10">
+  <h2 class="text-2xl font-bold mb-6 text-gray-800">Open Buyer Requirements</h2>
+  {% for req in requirements %}
+    <div class="bg-white p-4 rounded shadow mb-4">
+      <h3 class="text-lg font-semibold">{{ req.title }}</h3>
+      <p>{{ req.description }}</p>
+      <p>Quantity: {{ req.quantity }}</p>
+      <p>Expected Price: {{ req.expectedPriceRange }}</p>
+      <p>Deadline: {{ req.deadline }}</p>
+      <a href="/quotes/place/{{ req.id }}" class="text-blue-600 hover:underline">Place a Quote</a>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

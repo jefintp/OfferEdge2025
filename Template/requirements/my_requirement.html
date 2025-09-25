@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}My Requirements | OfferEdge{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto mt-10">
+  <h2 class="text-2xl font-bold mb-6 text-gray-800">Your Posted Requirements</h2>
+  {% if requirements %}
+    <ul class="space-y-4">
+      {% for req in requirements %}
+        <li class="bg-white p-4 rounded shadow">
+          <h3 class="text-lg font-semibold">{{ req.title }}</h3>
+          <p class="text-sm text-gray-600">{{ req.description }}</p>
+          <p class="text-sm">Quantity: {{ req.quantity }}</p>
+          <p class="text-sm">Expected Price: {{ req.expectedPriceRange }}</p>
+          <p class="text-sm">Deadline: {{ req.deadline }}</p>
+          <p class="text-xs text-gray-400">Posted at: {{ req.createdAt }}</p>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-gray-600">You haven’t posted any requirements yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

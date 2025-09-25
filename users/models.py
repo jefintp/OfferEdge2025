@@ -1,7 +1,15 @@
+# users/models.py
 from django.db import models
-from django.contrib.auth.models import AbstractUser
 
-class User(AbstractUser):
-    ROLE_CHOICES = (('buyer', 'Buyer'), ('seller', 'Seller'))
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES)
-# Create your models here.
+# No custom user model needed for now
+from mongoengine import Document, StringField
+import bcrypt
+class User(Document):
+    userid = StringField(required=True, unique=True)
+    passwordHash = StringField(required=True)
+    def set_password(self, raw_password):
+        self.passwordHash = bcrypt.hashpw(raw_password.encode(), bcrypt.gensalt()).decode()
+
+    def check_password(self, raw_password):
+        return bcrypt.checkpw(raw_password.encode(), self.passwordHash.encode())
+
