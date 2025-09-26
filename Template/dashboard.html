@@ -3,102 +3,166 @@
 {% block title %}Welcome | OfferEdge{% endblock %}
 
 {% block content %}
-<main class="flex items-center justify-center min-h-screen px-4 bg-gray-50">
-  <div class="bg-white shadow-xl rounded-xl p-8 w-full max-w-2xl text-center">
-    
-    <!-- 🔔 Custom Dashboard Greeting -->
-    <h1 class="text-3xl font-bold text-gray-800 mb-2">Welcome to Offeredge Dashboard</h1>
-    <p class="text-lg text-gray-600 mb-6">Hello, {{ userid }}!</p>
+<main class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-4xl mx-auto bg-white shadow-2xl rounded-2xl p-6 sm:p-10 border border-gray-100">
 
-    <p class="text-gray-600 mb-6">What would you like to do today?</p>
+    {% if finalized_success %}
+      <div class="bg-green-50 border border-green-300 text-green-800 px-6 py-4 rounded-lg relative mb-8 text-center text-lg font-medium animate-fade-in">
+        <span class="mr-2">🎉</span> Deal finalized successfully!
+      </div>
+    {% endif %}
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-      <a href="/requirements/post" class="block bg-blue-600 text-white py-4 rounded-lg hover:bg-blue-700 transition">
-        <span class="text-lg font-semibold">📌 Post a Requirement</span>
-        <p class="text-sm mt-1">Describe what you need and let sellers bid.</p>
+    <div class="text-center mb-10">
+      <h1 class="text-4xl font-extrabold text-gray-900 mb-2 leading-tight">Welcome, <span class="text-blue-600">{{ userid }}</span>!</h1>
+      <p class="text-xl text-gray-600">Your OfferEdge Dashboard awaits.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+      <a href="/requirements/post" class="group block p-6 bg-blue-600 hover:bg-blue-700 transition-all duration-300 rounded-xl shadow-lg transform hover:-translate-y-1 hover:scale-102">
+        <div class="flex items-center space-x-4">
+          <span class="text-white text-4xl group-hover:rotate-6 transition-transform duration-300">💡</span>
+          <div>
+            <span class="text-white text-2xl font-bold block">Post a Requirement</span>
+            <p class="text-blue-100 text-base mt-1">Describe what you need and let sellers bid.</p>
+          </div>
+        </div>
       </a>
 
-      <a href="/quotes/explore" class="block bg-green-600 text-white py-4 rounded-lg hover:bg-green-700 transition">
-        <span class="text-lg font-semibold">💬 Place a Bid</span>
-        <p class="text-sm mt-1">Explore buyer requests and make your offer.</p>
+      <a href="/quotes/explore" class="group block p-6 bg-green-600 hover:bg-green-700 transition-all duration-300 rounded-xl shadow-lg transform hover:-translate-y-1 hover:scale-102">
+        <div class="flex items-center space-x-4">
+          <span class="text-white text-4xl group-hover:rotate-6 transition-transform duration-300">🔍</span>
+          <div>
+            <span class="text-white text-2xl font-bold block">Explore & Bid</span>
+            <p class="text-green-100 text-base mt-1">Browse buyer requests and make your offer.</p>
+          </div>
+        </div>
       </a>
     </div>
 
-   <!-- 📋 Your Posted Requirements -->
-<div class="text-left mb-10">
-  <h2 class="text-xl font-semibold text-gray-700 mb-4">Your Posted Requirements</h2>
-  {% if requirements %}
-    <ul class="space-y-4">
-      {% for req in requirements %}
-        <li class="bg-gray-100 p-4 rounded-lg shadow-sm">
-          <h3 class="text-lg font-bold text-blue-600">
-            <a href="/quotes/for/{{ req.id }}" class="hover:underline">
-              {{ req.title }}
-            </a>
-          </h3>
-          <p class="text-sm text-gray-700">{{ req.description }}</p>
-          <p class="text-sm">Quantity: {{ req.quantity }}</p>
-          <p class="text-sm">Expected Price: {{ req.expectedPriceRange }}</p>
-          <p class="text-sm">Deadline: {{ req.deadline }}</p>
-          <p class="text-xs text-gray-400">Posted at: {{ req.createdAt }}</p>
+    <section class="mb-12">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b-2 border-blue-500 pb-2 flex items-center">
+        <span class="mr-3 text-blue-500">📝</span> Your Posted Requirements
+      </h2>
+      {% if requirements %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {% for req in requirements %}
+            <div class="bg-white border border-gray-200 rounded-lg shadow-md p-6 relative group hover:shadow-lg transition-shadow duration-300">
+              <h3 class="text-xl font-bold text-blue-700 mb-2">
+                <a href="/quotes/for/{{ req.id }}" class="hover:underline">{{ req.title }}</a>
+              </h3>
+              <p class="text-sm text-gray-600 mb-3">{{ req.description|truncatechars:100 }}</p>
+              <div class="text-sm text-gray-500 space-y-1 mb-4">
+                <p><span class="font-semibold">📦 Quantity:</span> {{ req.quantity }}</p>
+                <p><span class="font-semibold">💰 Price Range:</span> {{ req.expectedPriceRange }}</p>
+                <p><span class="font-semibold">⏰ Deadline:</span> {{ req.deadline }}</p>
+                <p class="text-xs text-gray-400">Posted: {{ req.createdAt|date:"M d, Y" }}</p>
+              </div>
 
-          <p class="text-xs text-gray-500">Quotes received: {{ req.quotes|length }}</p>
-
-          {% for quote in req.quotes %}
-            <div class="mt-2 p-2 border rounded bg-gray-50">
-              <p class="text-sm">💰 Price: ₹{{ quote.price }}</p>
-              <p class="text-sm">🚚 Delivery: {{ quote.deliveryTimeline }}</p>
-              <p class="text-sm">📝 Notes: {{ quote.notes }}</p>
-              <p class="text-xs text-gray-500">Chat eligible: {{ req.chat_flags|get_item:quote.id }}</p>
-
-              {% if req.chat_flags|get_item:quote.id %}
-                <a href="/chat/{{ quote.id }}" class="text-blue-600 hover:underline text-sm block mt-2">
-                  💬 Start Negotiation
+              <div class="flex justify-between items-center text-sm mb-4">
+                <p class="text-blue-600 font-semibold">Quotes: {{ req.quotes|length }}</p>
+                <a href="/quotes/for/{{ req.id }}" class="text-blue-500 hover:underline flex items-center">
+                  View Quotes <span class="ml-1">→</span>
                 </a>
-              {% endif %}
+              </div>
+
+              {% for quote in req.quotes|slice:":1" %} {# Show only first quote or adjust as needed #}
+                <div class="border-t border-gray-200 pt-4 mt-4">
+                  <h4 class="font-semibold text-md text-gray-700 mb-2">Latest Quote:</h4>
+                  <p class="text-sm text-gray-600 mb-1">💰 Price: ₹{{ quote.price }}</p>
+                  <p class="text-sm text-gray-600 mb-1">🚚 Delivery: {{ quote.deliveryTimeline }}</p>
+                  <p class="text-xs text-gray-500 mb-3">Notes: {{ quote.notes|truncatechars:50 }}</p>
+
+                  {% with quote_id_str=quote.id|stringformat:"s" %}
+                    {% if req.chat_flags|get_item:quote_id_str %}
+                      <a href="/chat/{{ quote.id }}" class="inline-flex items-center bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium hover:bg-blue-200 transition">
+                        <span class="mr-1">💬</span> Start Negotiation
+                      </a>
+                    {% endif %}
+
+                    {% if userid == req.buyerid %}
+                      {% if req.finalized_quote_id == quote_id_str %}
+                        <span class="inline-flex items-center bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium mt-2 ml-2">
+                          <span class="mr-1">✅</span> Finalized
+                        </span>
+                      {% elif not req.finalized_quote_id %}
+                        <form action="/deals/finalize/{{ quote.id }}/" method="POST" class="inline-block mt-2 ml-2">
+                          {% csrf_token %}
+                          <button type="submit" class="inline-flex items-center bg-green-600 text-white px-3 py-1 rounded-full text-sm font-medium hover:bg-green-700 transition">
+                            <span class="mr-1">✅</span> Finalize Deal
+                          </button>
+                        </form>
+                      {% endif %}
+                    {% endif %}
+                  {% endwith %}
+                </div>
+              {% empty %}
+                <p class="text-sm text-gray-500 mt-4">No quotes received yet. Share your requirement to get bids!</p>
+              {% endfor %}
             </div>
-          {% empty %}
-            <p class="text-sm text-red-500">No quotes yet.</p>
           {% endfor %}
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p class="text-gray-600">You haven’t posted any requirements yet.</p>
-  {% endif %}
-</div>
-    <!-- 📄 Your Placed Quotes -->
-    <div class="text-left mb-10">
-      <h2 class="text-xl font-semibold text-gray-700 mb-4">Your Placed Quotes</h2>
+        </div>
+      {% else %}
+        <p class="text-gray-600 text-center py-4 border border-gray-200 rounded-lg">You haven’t posted any requirements yet. Get started by posting one!</p>
+      {% endif %}
+    </section>
+
+    <section class="mb-12">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b-2 border-green-500 pb-2 flex items-center">
+        <span class="mr-3 text-green-500">✍️</span> Your Placed Quotes
+      </h2>
       {% if my_quotes %}
-        <ul class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           {% for quote in my_quotes %}
-            <li class="bg-gray-100 p-4 rounded-lg shadow-sm">
-              <h3 class="text-lg font-bold text-green-600">
+            <div class="bg-white border border-gray-200 rounded-lg shadow-md p-6 relative group hover:shadow-lg transition-shadow duration-300">
+              <h3 class="text-xl font-bold text-green-700 mb-2">
                 {{ req_map|get_item:quote.req_id }}
               </h3>
-              <p class="text-sm">💰 Price: ₹{{ quote.price }}</p>
-              <p class="text-sm">📦 Delivery Timeline: {{ quote.deliveryTimeline }}</p>
-              <p class="text-sm">📝 Notes: {{ quote.notes }}</p>
-              <p class="text-xs text-gray-400">Placed at: {{ quote.createdon }}</p>
+              <div class="text-sm text-gray-600 space-y-1 mb-4">
+                <p><span class="font-semibold">💰 Your Price:</span> ₹{{ quote.price }}</p>
+                <p><span class="font-semibold">📦 Delivery:</span> {{ quote.deliveryTimeline }}</p>
+                <p class="text-xs text-gray-500">Notes: {{ quote.notes|truncatechars:50 }}</p>
+                <p class="text-xs text-gray-400">Placed: {{ quote.createdon|date:"M d, Y" }}</p>
+              </div>
 
-              <p class="text-xs text-gray-500">Chat eligible: {{ chat_enabled_map|get_item:quote.id }}</p>
-
-              {% if chat_enabled_map|get_item:quote.id %}
-                <a href="/chat/{{ quote.id }}" class="text-green-600 hover:underline text-sm block mt-2">
-                  💬 Start Negotiation
-                </a>
+              {% with quote_id_str=quote.id|stringformat:"s" %}
+                {% if chat_enabled_map|get_item:quote_id_str %}
+                  <a href="/chat/{{ quote.id }}" class="inline-flex items-center bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium hover:bg-green-200 transition">
+                    <span class="mr-1">💬</span> Start Negotiation
+                  </a>
+                {% endif %}
+              {% endwith %}
+              {% if quote.is_finalized %} {# Assuming you have a way to check if quote is finalized #}
+                <span class="inline-flex items-center bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium mt-2 ml-2">
+                    <span class="mr-1">✅</span> Accepted
+                </span>
               {% endif %}
-            </li>
+            </div>
           {% endfor %}
-        </ul>
-        <a href="/quotes/my" class="text-sm text-green-600 hover:underline mt-2 inline-block">View All Quotes →</a>
+        </div>
+        <div class="text-center mt-8">
+            <a href="/quotes/my" class="inline-flex items-center text-lg text-green-600 font-semibold hover:underline hover:text-green-700 transition-colors duration-300">
+                View All Your Quotes <span class="ml-2">→</span>
+            </a>
+        </div>
       {% else %}
-        <p class="text-gray-600">You haven’t placed any quotes yet.</p>
+        <p class="text-gray-600 text-center py-4 border border-gray-200 rounded-lg">You haven’t placed any quotes yet. Explore requirements and make an offer!</p>
       {% endif %}
-    </div>
+    </section>
 
-    <p class="text-sm text-gray-500 mt-8">Need help? <a href="#" class="text-blue-500 hover:underline">Contact Support</a></p>
+    <div class="text-center mt-12 pt-6 border-t border-gray-200">
+      <p class="text-md text-gray-500">Need help? <a href="#" class="text-blue-600 hover:underline font-medium">Contact Support</a></p>
+    </div>
   </div>
 </main>
+
+<style>
+  /* Custom animation for the success message */
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out forwards;
+  }
+</style>
 {% endblock %}

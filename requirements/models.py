@@ -14,3 +14,4 @@ class Requirement(Document):
     createdAt = DateTimeField(default=datetime.utcnow)
     negotiation_mode = StringField(choices=["lowest_bid", "negotiation"], required=True)
     negotiation_trigger_price = FloatField()  # Only used if negotiation is enabled
+    attachment = models.FileField(upload_to='uploads/', blank=True, null=True)

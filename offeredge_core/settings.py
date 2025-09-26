@@ -35,7 +35,7 @@ INSTALLED_APPS = [
     'requirements',
     'quotes',
     'negotiation',
-    'deal',
+    'deals',
     'feedback',
     'moderation',
     'channels',

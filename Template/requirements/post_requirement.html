@@ -1,44 +1,75 @@
-{% extends 'base.html' %}
+{% extends 'base_logged_in.html' %}
+{% load form_filters %}
 {% block title %}Post Requirement | OfferEdge{% endblock %}
+
 {% block content %}
-<div class="max-w-xl mx-auto mt-10 bg-white p-6 rounded shadow">
-  <h2 class="text-2xl font-bold mb-6 text-center text-blue-600">Post a Requirement</h2>
-  <form method="POST" class="space-y-4">
+<div class="max-w-xl mx-auto mt-12 bg-white p-8 rounded-lg shadow-md">
+  <h2 class="text-3xl font-bold mb-8 text-center text-blue-600">Post a Requirement</h2>
+
+  <!-- ✅ Add enctype for file upload -->
+  <form method="POST" enctype="multipart/form-data" class="space-y-6">
     {% csrf_token %}
-    
+
     <!-- 📦 Requirement Fields -->
-    {{ form.title.label_tag }} {{ form.title }}
-    {{ form.description.label_tag }} {{ form.description }}
-    {{ form.quantity.label_tag }} {{ form.quantity }}
-    {{ form.expectedPriceRange.label_tag }} {{ form.expectedPriceRange }}
-    {{ form.deadline.label_tag }} {{ form.deadline }}
+    <div>
+      <label class="block font-semibold mb-1">{{ form.title.label }}</label>
+      {{ form.title|add_class:"w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-1">{{ form.description.label }}</label>
+      {{ form.description|add_class:"w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-1">{{ form.quantity.label }}</label>
+      {{ form.quantity|add_class:"w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-1">{{ form.expectedPriceRange.label }}</label>
+      {{ form.expectedPriceRange|add_class:"w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+    </div>
+
+    <div>
+      <label class="block font-semibold mb-1">{{ form.deadline.label }}</label>
+      {{ form.deadline|add_class:"w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+    </div>
+
+    <!-- 📎 File Upload -->
+    <div>
+      <label class="block font-semibold mb-1">{{ form.attachment.label }}</label>
+      {{ form.attachment|add_class:"w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+    </div>
 
     <!-- 🔄 Negotiation Preference -->
-    <div class="mt-6">
+    <div>
       <label class="block font-semibold mb-2">Negotiation Preference</label>
       {{ form.negotiation_mode }}
     </div>
 
     <!-- 💬 Trigger Price (conditional) -->
-    <div class="mt-4" id="negotiation-trigger" style="display:none;">
+    <div id="negotiation-trigger" class="hidden">
       <label class="block font-semibold mb-2">Enable Negotiation Below Price</label>
-      {{ form.negotiation_trigger_price }}
+      {{ form.negotiation_trigger_price|add_class:"w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
     </div>
 
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const radios = document.querySelectorAll('input[name="negotiation_mode"]');
-        const triggerDiv = document.getElementById("negotiation-trigger");
-
-        radios.forEach(radio => {
-          radio.addEventListener("change", () => {
-            triggerDiv.style.display = radio.value === "negotiation" ? "block" : "none";
-          });
-        });
-      });
-    </script>
-
-    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Submit</button>
+    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700 transition">
+      Submit
+    </button>
   </form>
 </div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const radios = document.querySelectorAll('input[name="negotiation_mode"]');
+    const triggerDiv = document.getElementById("negotiation-trigger");
+
+    radios.forEach(radio => {
+      radio.addEventListener("change", () => {
+        triggerDiv.classList.toggle("hidden", radio.value !== "negotiation");
+      });
+    });
+  });
+</script>
 {% endblock %}

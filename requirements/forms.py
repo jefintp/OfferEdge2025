@@ -18,6 +18,8 @@ class RequirementForm(forms.Form):
     )
     negotiation_trigger_price = forms.FloatField(required=False)
 
+    attachment = forms.FileField(required=False)  # ✅ Add this line
+
     def clean(self):
         cleaned_data = super().clean()
         mode = cleaned_data.get("negotiation_mode")

@@ -8,9 +8,12 @@ def explore_requirements_view(request):
     if 'userid' not in request.session:
         return redirect('/users/login')
 
-    all_reqs = Requirement.objects().order_by('-createdAt')
-    return render(request, 'quotes/explore_quotes.html', {'requirements': all_reqs})
+    user_id = request.session['userid']
+    requirements = Requirement.objects(buyerid__ne=user_id)  # ✅ Exclude own requirements
 
+    return render(request, 'quotes/explore_quotes.html', {
+        'requirements': requirements
+    })
 
 # 📥 Place a quote on a specific requirement
 def place_quote_view(request, reqid):
@@ -21,11 +24,25 @@ def place_quote_view(request, reqid):
     if not requirement:
         return redirect('/quotes/explore')
 
+    # ✅ Prevent self-bidding
+    if requirement.buyerid == request.session['userid']:
+        return render(request, 'quotes/place_quote.html', {
+            'requirement': requirement,
+            'form': None,
+            'self_quote_blocked': True
+        })
+
+    # ✅ Prevent duplicate quote
+    existing = Quote.objects(req_id=str(requirement.id), seller_id=request.session['userid']).first()
+    if existing:
+        print("⚠️ Duplicate quote detected")
+        return redirect('/quotes/explore')
+
     if request.method == 'POST':
         form = QuoteForm(request.POST, request.FILES)
         if form.is_valid():
             quote = Quote(
-                req_id=str(requirement.id),  # ✅ Save as string to match Quote.req_id
+                req_id=str(requirement.id),
                 seller_id=request.session['userid'],
                 price=form.cleaned_data['price'],
                 deliveryTimeline=form.cleaned_data['deliveryTimeline'],
@@ -43,10 +60,9 @@ def place_quote_view(request, reqid):
 
     return render(request, 'quotes/place_quote.html', {
         'form': form,
-        'requirement': requirement
+        'requirement': requirement,
+        'self_quote_blocked': False
     })
-
-
 # 📜 View all quotes placed by the logged-in seller
 def my_quotes_view(request):
     if 'userid' not in request.session:

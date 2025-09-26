@@ -5,7 +5,8 @@ import bcrypt
 from requirements.models import Requirement
 from quotes.models import Quote
 from bson import ObjectId
-
+from django.shortcuts import render, redirect
+from deals.models import Requirement, Quote
 # ✅ Registration
 def signup_view(request):
     if request.method == 'POST':
@@ -26,13 +27,24 @@ def login_view(request):
         userid = request.POST['userid']
         password = request.POST['password']
         user = User.objects(userid=userid).first()
+
         if user and user.check_password(password):
             request.session['userid'] = userid
-            return redirect('/dashboard')
-        return render(request, 'login.html', {'error': 'Invalid credentials'})
-    return render(request, 'login.html')
 
-# ✅ Logout
+            # ✅ Force boolean conversion for MongoEngine field
+            raw_admin_flag = user.is_admin
+            request.session['is_admin'] = str(raw_admin_flag).lower() == 'true'
+
+            # ✅ Debug prints to confirm
+            print("User is_admin from DB:", raw_admin_flag)
+            print("Session is_admin set to:", request.session['is_admin'])
+
+            next_url = request.session.pop('next', None)
+            return redirect(next_url or '/dashboard')
+
+        return render(request, 'login.html', {'error': 'Invalid credentials'})
+
+    return render(request, 'login.html')
 def logout_view(request):
     request.session.flush()
     return redirect('/users/login')
@@ -51,11 +63,26 @@ def dashboard_view(request):
     for req in raw_requirements:
         quotes = list(Quote.objects(req_id=str(req.id)))
         chat_flags = {}
+        finalized_quote_id = None
 
+        # 🔍 Check if any quote is finalized for this requirement
+        for quote in quotes:
+            try:
+                deal = Deal.objects.get(quote_id=str(quote.id))
+                finalized_quote_id = str(deal.quote_id)
+                break  # only one finalized quote per requirement
+            except:
+                continue
+
+        # 💬 Chat eligibility
         if getattr(req, 'negotiation_mode', None) == "negotiation" and getattr(req, 'negotiation_trigger_price', None) is not None:
-            for quote in quotes:
-                if quote.price < req.negotiation_trigger_price:
-                    chat_flags[str(quote.id)] = True
+            try:
+                trigger_price = float(req.negotiation_trigger_price)
+                for quote in quotes:
+                    if float(quote.price) < trigger_price:
+                        chat_flags[str(quote.id)] = True
+            except Exception as e:
+                print(f"⚠️ Error comparing prices for {req.title}: {e}")
 
         my_requirements.append({
             'id': str(req.id),
@@ -65,31 +92,43 @@ def dashboard_view(request):
             'expectedPriceRange': req.expectedPriceRange,
             'deadline': req.deadline,
             'createdAt': req.createdAt,
+            'buyerid': req.buyerid,
             'quotes': quotes,
-            'chat_flags': chat_flags
+            'chat_flags': chat_flags,
+            'finalized_quote_id': finalized_quote_id  # ✅ used in template
         })
 
     # 🔹 Quotes you placed
     my_quotes = Quote.objects(seller_id=userid).order_by('-createdon')
 
-    # 🔹 Requirement title map
+    # 🔹 Map requirement titles for placed quotes
     req_map = {str(req.id): req.title for req in Requirement.objects()}
 
-    # 💬 Chat eligibility map (for placed quotes)
+    # 🔹 Chat eligibility for placed quotes
     chat_enabled_map = {}
-
     for quote in my_quotes:
-        req = Requirement.objects(id=quote.req_id).first()
-        if req and getattr(req, 'negotiation_mode', None) == "negotiation" and getattr(req, 'negotiation_trigger_price', None) is not None:
-            if quote.price < req.negotiation_trigger_price:
-                chat_enabled_map[str(quote.id)] = True
+        try:
+            req = Requirement.objects.get(id=quote.req_id)
+            if getattr(req, 'negotiation_mode', None) == "negotiation" and getattr(req, 'negotiation_trigger_price', None) is not None:
+                trigger_price = float(req.negotiation_trigger_price)
+                if float(quote.price) < trigger_price:
+                    chat_enabled_map[str(quote.id)] = True
+        except Exception as e:
+            print(f"⚠️ Error checking chat eligibility for quote {quote.id}: {e}")
+
+    # ✅ Success banner logic
+    finalized_success = False
+    if request.session.get('finalized_success'):
+        finalized_success = True
+        del request.session['finalized_success']
 
     return render(request, 'dashboard.html', {
         'userid': userid,
         'requirements': my_requirements,
         'my_quotes': my_quotes,
         'req_map': req_map,
-        'chat_enabled_map': chat_enabled_map
+        'chat_enabled_map': chat_enabled_map,
+        'finalized_success': finalized_success
     })
 
 # ✅ Test MongoDB Save
