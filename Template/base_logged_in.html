@@ -13,11 +13,16 @@
 <body class="bg-gray-50 text-gray-800">
 
   <!-- 🔐 Logged-in Navbar -->
-  <header class="bg-white shadow-sm">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-      <h1 class="text-xl font-bold text-blue-600">OfferEdge</h1>
-      <nav class="flex space-x-6 text-sm font-medium text-gray-700">
-        <a href="{% url 'logout' %}" class="hover:text-red-600">Logout</a>
+   <header class="backdrop-blur-md bg-white/70 shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex flex-col sm:flex-row justify-between items-center">
+      <h1 class="text-3xl font-extrabold text-blue-600 mb-2 sm:mb-0 tracking-tight">
+        Offer<span class="text-blue-800">Edge</span>
+      </h1>
+
+      <nav class="flex flex-wrap justify-center space-x-4 sm:space-x-6 text-sm font-medium text-gray-700">
+        <a href="{% url 'logout' %}" class="bg-blue-600 text-white px-4 py-1.5 rounded-full hover:bg-blue-700 transition-all">Log Out</a>
+   
+   
       </nav>
     </div>
   </header>

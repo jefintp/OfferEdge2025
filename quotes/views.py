@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from .forms import QuoteForm
 from quotes.models import Quote
 from requirements.models import Requirement
+from deals.models import Deal
 
 # 🔍 Explore all posted requirements
 def explore_requirements_view(request):
@@ -74,25 +75,40 @@ def my_quotes_view(request):
 
 
 # 📊 View all quotes for a specific requirement
-def quotes_for_requirement_view(request, reqid):
-    if 'userid' not in request.session:
-        return redirect('/users/login')
 
-    requirement = Requirement.objects(id=reqid).first()
-    if not requirement:
-        return redirect('/dashboard')
+def quotes_for_requirement_view(request, reqid):
+    req = Requirement.objects(id=reqid).first()
+    if not req:
+        return redirect('/quotes/explore')
 
     quotes = Quote.objects(req_id=reqid).order_by('-createdon')
 
-    # 💬 Enable chat only for quotes below trigger price
-    chat_enabled_map = {}
-    if requirement.negotiation_mode == "negotiation" and hasattr(requirement, 'negotiation_trigger_price'):
-        for quote in quotes:
-            chat_enabled_map[str(quote.id)] = quote.price < requirement.negotiation_trigger_price
+    # ✅ Detect finalized quote from Deal model
+    finalized_quote_id = None
+    for quote in quotes:
+        deal = Deal.objects(quote_id=str(quote.id)).first()
+        if deal:
+            finalized_quote_id = str(deal.quote_id)
+            break
 
-    return render(request, 'quotes/quotes_for_requirement.html', {
-        'requirement': requirement,
-        'quotes': quotes,
-        'chat_enabled_map': chat_enabled_map,
-        'userid': request.session['userid']  # ✅ Add this line
+    # ✅ Build chat eligibility map
+    chat_enabled_map = {}
+    try:
+        if req.negotiation_mode == "negotiation" and req.negotiation_trigger_price is not None:
+            trigger_price = float(req.negotiation_trigger_price)
+            for quote in quotes:
+                if float(quote.price) < trigger_price:
+                    chat_enabled_map[str(quote.id)] = True
+    except Exception as e:
+        print(f"⚠️ Error checking chat eligibility for quotes in requirement {reqid}: {e}")
+
+    userid = request.session.get("userid")
+
+    return render(request, "quotes/quotes_for_requirement.html", {
+        "requirement": req,
+        "quotes": quotes,
+        "finalized_quote_id": finalized_quote_id,
+        "chat_enabled_map": chat_enabled_map,
+        "userid": userid
     })
+

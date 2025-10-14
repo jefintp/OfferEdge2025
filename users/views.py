@@ -51,7 +51,6 @@ def logout_view(request):
     request.session.flush()
     return redirect('/users/login')
 
-# ✅ Dashboard (protected manually)
 def dashboard_view(request):
     if 'userid' not in request.session:
         return redirect('/users/login')
@@ -61,6 +60,7 @@ def dashboard_view(request):
     # 🔹 Requirements you posted
     raw_requirements = Requirement.objects(buyerid=userid).order_by('-createdAt')
     my_requirements = []
+    finalized_quote_map = {}  # ✅ map of req.id → finalized quote.id
 
     for req in raw_requirements:
         quotes = list(Quote.objects(req_id=str(req.id)))
@@ -72,7 +72,7 @@ def dashboard_view(request):
             try:
                 deal = Deal.objects.get(quote_id=str(quote.id))
                 finalized_quote_id = str(deal.quote_id)
-                break  # only one finalized quote per requirement
+                break
             except Deal.DoesNotExist:
                 continue
 
@@ -83,9 +83,6 @@ def dashboard_view(request):
                 best_quote = sorted_quotes[0]
                 best_quote.finalized = True
                 best_quote.save()
-
-                req.finalized_quote_id = str(best_quote.id)
-                req.save()
 
                 Deal(
                     quote_id=str(best_quote.id),
@@ -109,6 +106,8 @@ def dashboard_view(request):
             except Exception as e:
                 print(f"⚠️ Error comparing prices for {req.title}: {e}")
 
+        finalized_quote_map[str(req.id)] = finalized_quote_id  # ✅ store per requirement
+
         my_requirements.append({
             'id': str(req.id),
             'title': req.title,
@@ -119,8 +118,7 @@ def dashboard_view(request):
             'createdAt': req.createdAt,
             'buyerid': req.buyerid,
             'quotes': quotes,
-            'chat_flags': chat_flags,
-            'finalized_quote_id': finalized_quote_id  # ✅ used in template
+            'chat_flags': chat_flags
         })
 
     # 🔹 Quotes you placed
@@ -153,5 +151,6 @@ def dashboard_view(request):
         'my_quotes': my_quotes,
         'req_map': req_map,
         'chat_enabled_map': chat_enabled_map,
-        'finalized_success': finalized_success
+        'finalized_success': finalized_success,
+        'finalized_quote_map': finalized_quote_map  # ✅ used in template
     })

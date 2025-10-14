@@ -9,39 +9,17 @@
 
   {% if quotes %}
     <ul class="space-y-4">
-      {% for quote in quotes %}
-        {% with quote_id_str=quote.id|stringformat:"s" %}
-        <li class="bg-white p-4 rounded shadow">
-          <p>💰 Price: ₹{{ quote.price }}</p>
-          <p>📦 Timeline: {{ quote.deliveryTimeline }}</p>
-          <p>📝 Notes: {{ quote.notes }}</p>
-          <p class="text-xs text-gray-400">Placed by: {{ quote.seller_id }} on {{ quote.createdon|date:"M d, Y" }}</p>
-
-          <div class="mt-3 space-x-2">
-            {% if chat_enabled_map|get_item:quote_id_str %}
-              <a href="/chat/{{ quote.id }}" class="inline-flex items-center bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium hover:bg-blue-200 transition">
-                <span class="mr-1">💬</span> Start Negotiation
-              </a>
+      {% with finalized_id=finalized_quote_id|stringformat:"s" %}
+        {% for quote in quotes %}
+          {% with quote_id_str=quote.id|stringformat:"s" %}
+            {% if quote_id_str == finalized_id %}
+              {% include "partials/quote_card.html" with quote=quote finalized="True" req=requirement userid=userid finalized_quote_id=finalized_id %}
+            {% else %}
+              {% include "partials/quote_card.html" with quote=quote finalized="False" req=requirement userid=userid finalized_quote_id=finalized_id %}
             {% endif %}
-
-            {% if userid == requirement.buyerid %}
-              {% if requirement.finalized_quote_id == quote_id_str %}
-                <span class="inline-flex items-center bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
-                  <span class="mr-1">✅</span> Finalized
-                </span>
-              {% elif not requirement.finalized_quote_id %}
-                <form action="/deals/finalize/{{ quote.id }}/" method="POST" class="inline-block">
-                  {% csrf_token %}
-                  <button type="submit" class="inline-flex items-center bg-green-600 text-white px-3 py-1 rounded-full text-sm font-medium hover:bg-green-700 transition">
-                    <span class="mr-1">✅</span> Finalize Deal
-                  </button>
-                </form>
-              {% endif %}
-            {% endif %}
-          </div>
-        </li>
-        {% endwith %}
-      {% endfor %}
+          {% endwith %}
+        {% endfor %}
+      {% endwith %}
     </ul>
   {% else %}
     <p class="text-gray-600">No quotes have been placed yet.</p>

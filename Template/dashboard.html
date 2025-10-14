@@ -1,5 +1,6 @@
 {% extends 'base_logged_in.html' %}
 {% load custom_tags %}
+{% load custom_filters %}
 {% block title %}Welcome | OfferEdge{% endblock %}
 
 {% block content %}
@@ -69,16 +70,18 @@
                 </a>
               </div>
 
-              {% with finalized_id=req.finalized_quote_id %}
+              {% with finalized_id=finalized_quote_map|get_item:req.id|stringformat:"s" %}
                 {% with rendered=False %}
                   {% for quote in req.quotes %}
-                    {% if quote.id|stringformat:"s" == finalized_id %}
-                      {% include "partials/quote_card.html" with quote=quote finalized=True req=req userid=userid %}
-                      {% with rendered=True %}{% endwith %}
-                    {% endif %}
+                    {% with quote_id_str=quote.id|stringformat:"s" %}
+                      {% if quote_id_str == finalized_id %}
+                        {% include "partials/quote_card.html" with quote=quote finalized="True" req=req userid=userid finalized_quote_id=finalized_id %}
+                        {% with rendered=True %}{% endwith %}
+                      {% endif %}
+                    {% endwith %}
                   {% endfor %}
-                  {% if not rendered and req.finalized_quote_id == None and req.quotes %}
-                    {% include "partials/quote_card.html" with quote=req.quotes.0 finalized=False req=req userid=userid %}
+                  {% if not rendered and not finalized_id and req.quotes %}
+                    {% include "partials/quote_card.html" with quote=req.quotes.0 finalized="False" req=req userid=userid finalized_quote_id=finalized_id %}
                   {% elif not req.quotes %}
                     <p class="text-sm text-gray-500 mt-4">No quotes received yet. Share your requirement to get bids!</p>
                   {% endif %}
@@ -91,6 +94,7 @@
         <p class="text-gray-600 text-center py-4 border border-gray-200 rounded-lg">You haven’t posted any requirements yet. Get started by posting one!</p>
       {% endif %}
     </section>
+
 
     <section class="mb-12">
       <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b-2 border-green-500 pb-2 flex items-center">
