@@ -1,4 +1,4 @@
-from mongoengine import Document, StringField, IntField, DateTimeField, FloatField
+from mongoengine import Document, StringField, IntField, DateTimeField, FloatField, BooleanField
 from datetime import datetime
 
 class Requirement(Document):
@@ -16,9 +16,11 @@ class Quote(Document):
     req_id = StringField(required=True)  # links to Requirement.id
     seller_id = StringField(required=True)
     price = FloatField(required=True)
-    deliveryTimeline = IntField()
+    deliveryTimeline = StringField(required=True)
     notes = StringField()
     createdon = DateTimeField(default=datetime.utcnow)
+    finalized = BooleanField(default=False)
+    attachments = StringField()  # Placeholder for file storage reference
 
 class Deal(Document):
     quote_id = StringField(required=True)

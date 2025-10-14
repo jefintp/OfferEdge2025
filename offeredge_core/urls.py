@@ -13,6 +13,7 @@ urlpatterns = [
     path('quotes/', include('quotes.urls')),
     path('moderation/', include('moderation.urls')),
     path('deals/', include('deals.urls')),
+    path("negotiation/", include("negotiation.urls"))
 
 
 

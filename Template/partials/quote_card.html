@@ -1,0 +1,33 @@
+{% load custom_tags %}
+{% with quote_id_str=quote.id|stringformat:"s" %}
+<div class="border-t {% if finalized %}border-green-500{% else %}border-gray-200{% endif %} pt-4 mt-4">
+  <h4 class="font-semibold text-md {% if finalized %}text-green-700{% else %}text-gray-700{% endif %} mb-2">
+    {% if finalized %}Accepted Quote{% else %}Latest Quote{% endif %}
+  </h4>
+
+  <p class="text-sm text-gray-600 mb-1">💰 Price: ₹{{ quote.price }}</p>
+  <p class="text-sm text-gray-600 mb-1">🚚 Delivery: {{ quote.deliveryTimeline }}</p>
+  <p class="text-xs text-gray-500 mb-3">Notes: {{ quote.notes|truncatechars:50 }}</p>
+
+  {% if req.chat_flags|get_item:quote_id_str %}
+    <a href="/chat/{{ quote.id }}" class="inline-flex items-center bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium hover:bg-blue-200 transition">
+      <span class="mr-1">💬</span> Start Negotiation
+    </a>
+  {% endif %}
+
+  {% if userid == req.buyerid %}
+    {% if finalized %}
+      <span class="inline-flex items-center bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium mt-2 ml-2">
+        <span class="mr-1">✅</span> Finalized
+      </span>
+    {% else %}
+      <form action="/deals/finalize/{{ quote.id }}/" method="POST" class="inline-block mt-2 ml-2">
+        {% csrf_token %}
+        <button type="submit" class="inline-flex items-center bg-green-600 text-white px-3 py-1 rounded-full text-sm font-medium hover:bg-green-700 transition">
+          <span class="mr-1">✅</span> Finalize Deal
+        </button>
+      </form>
+    {% endif %}
+  {% endif %}
+</div>
+{% endwith %}

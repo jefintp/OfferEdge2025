@@ -43,6 +43,8 @@ def my_requirements_view(request):
     return render(request, 'requirements/my_requirements.html', {'requirements': reqs})
 
 
+
+
 @csrf_exempt  # Remove once CSRF is fully wired
 def delete_requirement_view(request, reqid):
     if 'userid' not in request.session:
@@ -62,4 +64,6 @@ def delete_requirement_view(request, reqid):
     print("Request method:", request.method)
     print("Deleting reqid:", reqid)
     print("Found:", Requirement.objects(id=reqid).first())
+
+
 

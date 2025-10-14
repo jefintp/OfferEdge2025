@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from .forms import QuoteForm
-from .models import Quote
+from quotes.models import Quote
 from requirements.models import Requirement
 
 # 🔍 Explore all posted requirements
@@ -93,5 +93,6 @@ def quotes_for_requirement_view(request, reqid):
     return render(request, 'quotes/quotes_for_requirement.html', {
         'requirement': requirement,
         'quotes': quotes,
-        'chat_enabled_map': chat_enabled_map
+        'chat_enabled_map': chat_enabled_map,
+        'userid': request.session['userid']  # ✅ Add this line
     })

@@ -17,6 +17,10 @@
       <p class="text-xl text-gray-600">Your OfferEdge Dashboard awaits.</p>
     </div>
 
+    <a href="/negotiation/chat/dashboard/" class="text-blue-600 hover:underline font-medium">
+      💬 View All Negotiations
+    </a>
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
       <a href="/requirements/post" class="group block p-6 bg-blue-600 hover:bg-blue-700 transition-all duration-300 rounded-xl shadow-lg transform hover:-translate-y-1 hover:scale-102">
         <div class="flex items-center space-x-4">
@@ -65,39 +69,21 @@
                 </a>
               </div>
 
-              {% for quote in req.quotes|slice:":1" %} {# Show only first quote or adjust as needed #}
-                <div class="border-t border-gray-200 pt-4 mt-4">
-                  <h4 class="font-semibold text-md text-gray-700 mb-2">Latest Quote:</h4>
-                  <p class="text-sm text-gray-600 mb-1">💰 Price: ₹{{ quote.price }}</p>
-                  <p class="text-sm text-gray-600 mb-1">🚚 Delivery: {{ quote.deliveryTimeline }}</p>
-                  <p class="text-xs text-gray-500 mb-3">Notes: {{ quote.notes|truncatechars:50 }}</p>
-
-                  {% with quote_id_str=quote.id|stringformat:"s" %}
-                    {% if req.chat_flags|get_item:quote_id_str %}
-                      <a href="/chat/{{ quote.id }}" class="inline-flex items-center bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium hover:bg-blue-200 transition">
-                        <span class="mr-1">💬</span> Start Negotiation
-                      </a>
+              {% with finalized_id=req.finalized_quote_id %}
+                {% with rendered=False %}
+                  {% for quote in req.quotes %}
+                    {% if quote.id|stringformat:"s" == finalized_id %}
+                      {% include "partials/quote_card.html" with quote=quote finalized=True req=req userid=userid %}
+                      {% with rendered=True %}{% endwith %}
                     {% endif %}
-
-                    {% if userid == req.buyerid %}
-                      {% if req.finalized_quote_id == quote_id_str %}
-                        <span class="inline-flex items-center bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium mt-2 ml-2">
-                          <span class="mr-1">✅</span> Finalized
-                        </span>
-                      {% elif not req.finalized_quote_id %}
-                        <form action="/deals/finalize/{{ quote.id }}/" method="POST" class="inline-block mt-2 ml-2">
-                          {% csrf_token %}
-                          <button type="submit" class="inline-flex items-center bg-green-600 text-white px-3 py-1 rounded-full text-sm font-medium hover:bg-green-700 transition">
-                            <span class="mr-1">✅</span> Finalize Deal
-                          </button>
-                        </form>
-                      {% endif %}
-                    {% endif %}
-                  {% endwith %}
-                </div>
-              {% empty %}
-                <p class="text-sm text-gray-500 mt-4">No quotes received yet. Share your requirement to get bids!</p>
-              {% endfor %}
+                  {% endfor %}
+                  {% if not rendered and req.finalized_quote_id == None and req.quotes %}
+                    {% include "partials/quote_card.html" with quote=req.quotes.0 finalized=False req=req userid=userid %}
+                  {% elif not req.quotes %}
+                    <p class="text-sm text-gray-500 mt-4">No quotes received yet. Share your requirement to get bids!</p>
+                  {% endif %}
+                {% endwith %}
+              {% endwith %}
             </div>
           {% endfor %}
         </div>
@@ -113,36 +99,37 @@
       {% if my_quotes %}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           {% for quote in my_quotes %}
-            <div class="bg-white border border-gray-200 rounded-lg shadow-md p-6 relative group hover:shadow-lg transition-shadow duration-300">
-              <h3 class="text-xl font-bold text-green-700 mb-2">
-                {{ req_map|get_item:quote.req_id }}
-              </h3>
-              <div class="text-sm text-gray-600 space-y-1 mb-4">
-                <p><span class="font-semibold">💰 Your Price:</span> ₹{{ quote.price }}</p>
-                <p><span class="font-semibold">📦 Delivery:</span> {{ quote.deliveryTimeline }}</p>
-                <p class="text-xs text-gray-500">Notes: {{ quote.notes|truncatechars:50 }}</p>
-                <p class="text-xs text-gray-400">Placed: {{ quote.createdon|date:"M d, Y" }}</p>
-              </div>
+            {% with quote_id_str=quote.id|stringformat:"s" %}
+              <div class="bg-white border {% if quote.is_finalized %}border-green-500{% else %}border-gray-200{% endif %} rounded-lg shadow-md p-6 relative group hover:shadow-lg transition-shadow duration-300">
+                <h3 class="text-xl font-bold text-green-700 mb-2">
+                  {{ req_map|get_item:quote.req_id }}
+                </h3>
+                <div class="text-sm text-gray-600 space-y-1 mb-4">
+                  <p><span class="font-semibold">💰 Your Price:</span> ₹{{ quote.price }}</p>
+                  <p><span class="font-semibold">📦 Delivery:</span> {{ quote.deliveryTimeline }}</p>
+                  <p class="text-xs text-gray-500">Notes: {{ quote.notes|truncatechars:50 }}</p>
+                  <p class="text-xs text-gray-400">Placed: {{ quote.createdon|date:"M d, Y" }}</p>
+                </div>
 
-              {% with quote_id_str=quote.id|stringformat:"s" %}
                 {% if chat_enabled_map|get_item:quote_id_str %}
-                  <a href="/chat/{{ quote.id }}" class="inline-flex items-center bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium hover:bg-green-200 transition">
+                  <a href="/negotiation/chat/start/{{ quote.id }}" class="inline-flex items-center bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium hover:bg-green-200 transition">
                     <span class="mr-1">💬</span> Start Negotiation
                   </a>
                 {% endif %}
-              {% endwith %}
-              {% if quote.is_finalized %} {# Assuming you have a way to check if quote is finalized #}
-                <span class="inline-flex items-center bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium mt-2 ml-2">
+
+                {% if quote.is_finalized %}
+                  <span class="inline-flex items-center bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium mt-2 ml-2">
                     <span class="mr-1">✅</span> Accepted
-                </span>
-              {% endif %}
-            </div>
+                  </span>
+                {% endif %}
+              </div>
+            {% endwith %}
           {% endfor %}
         </div>
         <div class="text-center mt-8">
-            <a href="/quotes/my" class="inline-flex items-center text-lg text-green-600 font-semibold hover:underline hover:text-green-700 transition-colors duration-300">
-                View All Your Quotes <span class="ml-2">→</span>
-            </a>
+          <a href="/quotes/my" class="inline-flex items-center text-lg text-green-600 font-semibold hover:underline hover:text-green-700 transition-colors duration-300">
+            View All Your Quotes <span class="ml-2">→</span>
+          </a>
         </div>
       {% else %}
         <p class="text-gray-600 text-center py-4 border border-gray-200 rounded-lg">You haven’t placed any quotes yet. Explore requirements and make an offer!</p>
@@ -156,7 +143,8 @@
 </main>
 
 <style>
-  /* Custom animation for the success message */
+ 
+
   @keyframes fade-in {
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -166,3 +154,4 @@
   }
 </style>
 {% endblock %}
+ 

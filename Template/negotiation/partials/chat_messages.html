@@ -1,0 +1,16 @@
+<!-- {% for msg in messages %}
+  <div class="{% if msg.sender_id == userid %}text-right{% else %}text-left{% endif %}">
+    <p class="inline-block bg-white border border-gray-300 px-3 py-2 rounded-lg shadow-sm">{{ msg.message }}</p>
+    <span class="text-xs text-gray-400 block mt-1">{{ msg.timestamp|date:"H:i" }}</span>
+  </div>
+{% endfor %} -->
+{% for message in messages %}
+  <div class="mb-2">
+    <span class="font-semibold {% if message.sender_id == userid %}text-blue-600{% else %}text-gray-700{% endif %}">
+      {{ message.sender_id }}
+    </span>
+    <p class="text-sm text-gray-600">{{ message.message }}</p>
+    <p class="text-xs text-gray-400">{{ message.timestamp|date:"H:i:s" }}</p>
+  </div>
+{% endfor %}
+

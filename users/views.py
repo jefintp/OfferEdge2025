@@ -4,9 +4,10 @@ from .models import User
 import bcrypt
 from requirements.models import Requirement
 from quotes.models import Quote
+from deals.models import Deal  # ✅ Fix: import Deal model
 from bson import ObjectId
-from django.shortcuts import render, redirect
-from deals.models import Requirement, Quote
+from datetime import datetime
+
 # ✅ Registration
 def signup_view(request):
     if request.method == 'POST':
@@ -45,6 +46,7 @@ def login_view(request):
         return render(request, 'login.html', {'error': 'Invalid credentials'})
 
     return render(request, 'login.html')
+
 def logout_view(request):
     request.session.flush()
     return redirect('/users/login')
@@ -71,8 +73,31 @@ def dashboard_view(request):
                 deal = Deal.objects.get(quote_id=str(quote.id))
                 finalized_quote_id = str(deal.quote_id)
                 break  # only one finalized quote per requirement
-            except:
+            except Deal.DoesNotExist:
                 continue
+
+        # ✅ Auto-finalize if deadline passed and negotiation is disabled
+        if not finalized_quote_id and req.deadline < datetime.now() and getattr(req, 'negotiation_mode', None) != "negotiation":
+            sorted_quotes = sorted(quotes, key=lambda q: float(q.price))
+            if sorted_quotes:
+                best_quote = sorted_quotes[0]
+                best_quote.finalized = True
+                best_quote.save()
+
+                req.finalized_quote_id = str(best_quote.id)
+                req.save()
+
+                Deal(
+                    quote_id=str(best_quote.id),
+                    buyer_id=req.buyerid,
+                    seller_id=best_quote.seller_id,
+                    finalized_by="system",
+                    method="auto",
+                    finalized_on=datetime.now()
+                ).save()
+
+                finalized_quote_id = str(best_quote.id)
+                request.session['finalized_success'] = True
 
         # 💬 Chat eligibility
         if getattr(req, 'negotiation_mode', None) == "negotiation" and getattr(req, 'negotiation_trigger_price', None) is not None:
@@ -130,33 +155,3 @@ def dashboard_view(request):
         'chat_enabled_map': chat_enabled_map,
         'finalized_success': finalized_success
     })
-
-# ✅ Test MongoDB Save
-def test_user_save(request):
-    User(userid="jefin123", passwordHash="hashed_pw_abc123").save()
-    return HttpResponse("User saved to MongoDB!")
-
-# ✅ Debug view for quotes
-def debug_quotes_view(request):
-    userid = request.session.get('userid')
-    reqs = Requirement.objects(buyerid=userid)
-    data = []
-
-    for req in reqs:
-        quotes = Quote.objects(req_id=str(req.id))
-        data.append({
-            'req_id': str(req.id),
-            'title': req.title,
-            'quote_count': quotes.count(),
-            'quotes': [
-                {
-                    'price': q.price,
-                    'delivery': q.deliveryTimeline,
-                    'notes': q.notes,
-                    'quote_id': str(q.id),
-                    'seller': q.seller_id
-                } for q in quotes
-            ]
-        })
-
-    return JsonResponse({'requirements': data})

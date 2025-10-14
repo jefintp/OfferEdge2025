@@ -1,0 +1,21 @@
+{% extends 'base_logged_in.html' %}
+{% block title %}Negotiation Chat | OfferEdge{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto mt-10 bg-white p-6 rounded-lg shadow-md">
+  <h2 class="text-2xl font-bold text-blue-600 mb-4">Negotiation Chat</h2>
+
+  <div id="chat-messages"
+       hx-get="/negotiation/chat/messages/{{ session.id }}"
+       hx-trigger="every 2s"
+       hx-swap="innerHTML"
+       class="space-y-2 mb-4 max-h-96 overflow-y-auto border p-4 rounded bg-gray-50">
+    {% include "negotiation/partials/chat_messages.html" %}
+  </div>
+
+  <form method="POST" action="/negotiation/chat/send/{{ session.id }}/" class="flex space-x-2">
+    {% csrf_token %}
+    <input name="message" placeholder="Type your message..." class="flex-grow border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
+    <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Send</button>
+  </form>
+</div>
+{% endblock %}
