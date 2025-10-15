@@ -2,6 +2,8 @@ from django.contrib import admin
 from django.urls import path, include
 from users.views import dashboard_view
 from . import views
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -13,9 +15,8 @@ urlpatterns = [
     path('quotes/', include('quotes.urls')),
     path('moderation/', include('moderation.urls')),
     path('deals/', include('deals.urls')),
-    path("negotiation/", include("negotiation.urls"))
-
-
-
-
+    path("negotiation/", include("negotiation.urls")),
 ]
+
+# ✅ This must be outside the list
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

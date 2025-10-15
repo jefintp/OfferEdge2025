@@ -9,8 +9,10 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
+import os
 from pathlib import Path
+
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -124,6 +126,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / "Static"]
+# BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # Default primary key field type
@@ -136,3 +139,5 @@ connect(
     db='offeredge_db',
     host='mongodb+srv://jefintp_db_user:ROnjYyv5NDmUVW6G@cluster0.uu4zge7.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0',
 )
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

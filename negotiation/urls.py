@@ -2,6 +2,7 @@ from django.urls import path
 from negotiation.views import (
     start_chat_view, chat_room_view,
     send_message_view, chat_messages_partial, chat_dashboard_view
+    , upload_chat_file_view,
 )
 
 urlpatterns = [
@@ -10,4 +11,8 @@ urlpatterns = [
     path("chat/send/<str:session_id>/", send_message_view, name="send_message"),
     path("chat/messages/<str:session_id>/", chat_messages_partial, name="chat_messages_partial"),
     path("chat/<str:session_id>/", chat_room_view, name="chat_room"),  # ✅ dynamic last
+    path("negotiation/upload/", upload_chat_file_view, name="upload_chat_file"),
+    path("start/<str:quote_id>/", start_chat_view, name="start_chat"),
+    
+
 ]

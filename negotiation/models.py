@@ -15,3 +15,7 @@ class ChatMessage(Document):
     sender_id = StringField(required=True)
     message = StringField(required=True)
     timestamp = DateTimeField(default=datetime.now)
+    file_url = StringField()       # e.g. "/media/chat_uploads/abc123.png"
+    file_type = StringField()      # e.g. "image/png", "application/pdf"
+    original_filename = StringField()  # optional: "invoice.pdf"
+

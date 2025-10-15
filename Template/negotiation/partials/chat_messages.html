@@ -1,16 +1,45 @@
-<!-- {% for msg in messages %}
-  <div class="{% if msg.sender_id == userid %}text-right{% else %}text-left{% endif %}">
-    <p class="inline-block bg-white border border-gray-300 px-3 py-2 rounded-lg shadow-sm">{{ msg.message }}</p>
-    <span class="text-xs text-gray-400 block mt-1">{{ msg.timestamp|date:"H:i" }}</span>
-  </div>
-{% endfor %} -->
-{% for message in messages %}
-  <div class="mb-2">
-    <span class="font-semibold {% if message.sender_id == userid %}text-blue-600{% else %}text-gray-700{% endif %}">
-      {{ message.sender_id }}
-    </span>
-    <p class="text-sm text-gray-600">{{ message.message }}</p>
-    <p class="text-xs text-gray-400">{{ message.timestamp|date:"H:i:s" }}</p>
-  </div>
-{% endfor %}
+<div class="space-y-4">
+  {% for message in messages %}
+    <div class="flex {% if message.sender_id == userid %}justify-end{% else %}justify-start{% endif %}">
+      <div class="max-w-[75%]">
+        
+        <!-- 👤 Sender name -->
+        <span class="block text-xs mb-1 font-semibold {% if message.sender_id == userid %}text-blue-700 text-right{% else %}text-gray-600{% endif %}">
+          {{ message.sender_id }}
+        </span>
 
+        <!-- 💬 Message bubble -->
+        <div class="{% if message.sender_id == userid %}
+                      bg-gradient-to-br from-blue-600 to-blue-500 text-white rounded-2xl rounded-br-none
+                    {% else %}
+                      bg-gradient-to-br from-gray-100 to-gray-50 text-gray-800 border border-gray-200 rounded-2xl rounded-bl-none
+                    {% endif %}
+                    px-4 py-2 shadow-sm hover:shadow-md transition-all duration-200">
+
+          {% if message.message %}
+            <p class="text-sm leading-relaxed break-words">{{ message.message }}</p>
+          {% endif %}
+
+          {% if message.file_url %}
+            <div class="mt-2">
+              {% if message.file_type|slice:":5" == "image" %}
+                <img src="{{ message.file_url }}"
+                     class="rounded-lg border border-gray-200 max-h-48 object-cover hover:scale-[1.02] transition-transform" />
+              {% else %}
+                <a href="{{ message.file_url }}" target="_blank"
+                   class="{% if message.sender_id == userid %}text-blue-100 hover:text-blue-200{% else %}text-blue-600 hover:underline{% endif %} text-sm font-medium flex items-center gap-1">
+                  📎 {{ message.original_filename }}
+                </a>
+              {% endif %}
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- ⏰ Timestamp -->
+        <p class="text-[11px] text-gray-400 mt-1 {% if message.sender_id == userid %}text-right{% endif %}">
+          {{ message.timestamp|date:"H:i:s" }}
+        </p>
+      </div>
+    </div>
+  {% endfor %}
+</div>

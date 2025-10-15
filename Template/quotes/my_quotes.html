@@ -1,9 +1,18 @@
-{% extends 'base_logged_in.html' %}
-{% block content %}
-<h2>My Quotes</h2>
-<ul>
-  {% for quote in quotes %}
-    <li>₹{{ quote.price }} - {{ quote.deliveryTimeline }}</li>
-  {% endfor %}
-</ul>
-{% endblock %}
+{% for item in quote_data %}
+  {% with quote=item.quote requirement=item.requirement status=item.status %}
+    <div class="quote-card">
+      <h3 class="text-xl font-bold">{{ requirement.title }}</h3>
+      <p>💰 Price: ₹{{ quote.price }}</p>
+      <p>📦 Delivery: {{ quote.deliveryTimeline }}</p>
+      <p>📝 Notes: {{ quote.notes|truncatechars:50 }}</p>
+
+      {% if status == "selected" %}
+        <span class="badge bg-green-100 text-green-700">✅ Accepted</span>
+      {% elif status == "rejected" %}
+        <span class="badge bg-red-100 text-red-700">❌ Rejected</span>
+      {% else %}
+        <span class="badge bg-yellow-100 text-yellow-700">🟡 In Progress</span>
+      {% endif %}
+    </div>
+  {% endwith %}
+{% endfor %}

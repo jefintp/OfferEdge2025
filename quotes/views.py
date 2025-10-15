@@ -64,6 +64,7 @@ def place_quote_view(request, reqid):
         'requirement': requirement,
         'self_quote_blocked': False
     })
+
 # 📜 View all quotes placed by the logged-in seller
 def my_quotes_view(request):
     if 'userid' not in request.session:
@@ -71,11 +72,38 @@ def my_quotes_view(request):
 
     seller_id = request.session['userid']
     my_quotes = Quote.objects(seller_id=seller_id).order_by('-createdon')
-    return render(request, 'quotes/my_quotes.html', {'quotes': my_quotes})
 
+    # 🔍 Build a map: requirement_id → finalized quote_id
+    finalized_map = {
+        deal.requirement_id: deal.quote_id
+        for deal in Deal.objects()
+    }
+
+    enriched_quotes = []
+    for quote in my_quotes:
+        requirement = Requirement.objects(id=quote.req_id).first()
+        finalized_id = finalized_map.get(quote.req_id)
+
+        # 🔹 Determine status
+        if finalized_id == str(quote.id):
+            status = "selected"
+        elif finalized_id:
+            status = "rejected"
+        else:
+            status = "in_progress"
+
+        enriched_quotes.append({
+            "quote": quote,
+            "requirement": requirement,
+            "status": status
+        })
+
+    return render(request, 'quotes/my_quotes.html', {
+        'quote_data': enriched_quotes,
+        'userid': seller_id
+    })
 
 # 📊 View all quotes for a specific requirement
-
 def quotes_for_requirement_view(request, reqid):
     req = Requirement.objects(id=reqid).first()
     if not req:
@@ -92,15 +120,26 @@ def quotes_for_requirement_view(request, reqid):
             break
 
     # ✅ Build chat eligibility map
-    chat_enabled_map = {}
+    chat_flags = {}
     try:
         if req.negotiation_mode == "negotiation" and req.negotiation_trigger_price is not None:
             trigger_price = float(req.negotiation_trigger_price)
             for quote in quotes:
                 if float(quote.price) < trigger_price:
-                    chat_enabled_map[str(quote.id)] = True
+                    chat_flags[str(quote.id)] = True
     except Exception as e:
         print(f"⚠️ Error checking chat eligibility for quotes in requirement {reqid}: {e}")
+
+    # ✅ Build quote status map
+    quote_status_map = {}
+    for quote in quotes:
+        qid = str(quote.id)
+        if finalized_quote_id == qid:
+            quote_status_map[qid] = "selected"
+        elif finalized_quote_id:
+            quote_status_map[qid] = "rejected"
+        else:
+            quote_status_map[qid] = "in_progress"
 
     userid = request.session.get("userid")
 
@@ -108,7 +147,7 @@ def quotes_for_requirement_view(request, reqid):
         "requirement": req,
         "quotes": quotes,
         "finalized_quote_id": finalized_quote_id,
-        "chat_enabled_map": chat_enabled_map,
+        "chat_flags": chat_flags,
+        "quote_status_map": quote_status_map,
         "userid": userid
     })
-

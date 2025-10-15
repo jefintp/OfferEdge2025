@@ -1,0 +1,11 @@
+<h2>📦 Finalized Deals</h2>
+{% for item in deal_data %}
+  <div class="deal-card">
+    <h3>{{ item.requirement.title }}</h3>
+    <p>Quote: ₹{{ item.quote.price }}</p>
+    <p>Seller: {{ item.seller.username }}</p>
+    <p>Buyer: {{ item.buyer.username }}</p>
+    <p>Finalized on: {{ item.deal.finalized_on|date:"d M Y, h:i A" }}</p>
+    <p>Status: {{ item.deal.status }}</p>
+  </div>
+{% endfor %}
