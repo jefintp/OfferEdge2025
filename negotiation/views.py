@@ -3,7 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.conf import settings
 from negotiation.models import ChatSession, ChatMessage
-from deals.models import Quote
+from quotes.models import Quote
 from requirements.models import Requirement
 from datetime import datetime
 from bson import ObjectId
@@ -14,10 +14,14 @@ def start_chat_view(request, quote_id):
     userid = request.session.get("userid")
     quote = Quote.objects(id=quote_id).first()
     if not quote or not userid:
-        return redirect("/users/dashboard")
+        return redirect("/users/login")
 
     req = Requirement.objects(id=quote.req_id).first()
     if not req:
+        return redirect("/users/dashboard")
+
+    # Permission: only buyer or finalized seller may start
+    if userid not in [req.buyerid, quote.seller_id]:
         return redirect("/users/dashboard")
 
     session = ChatSession.objects(quote_id=str(quote.id)).first()
@@ -33,12 +37,23 @@ def start_chat_view(request, quote_id):
 
 
 def chat_room_view(request, session_id):
+    userid = request.session.get("userid")
+    if not userid:
+        return redirect("/users/login")
+
     session = ChatSession.objects(id=session_id).first()
+    if not session:
+        return redirect("/users/dashboard")
+
+    # Permission: only participants
+    if userid not in [session.buyer_id, session.seller_id]:
+        return redirect("/users/dashboard")
+
     messages = ChatMessage.objects(session_id=session).order_by('timestamp')
     return render(request, "negotiation/chat_room.html", {
         "session": session,
         "messages": messages,
-        "userid": request.session.get("userid")
+        "userid": userid
     })
 
 
@@ -47,6 +62,8 @@ def send_message_view(request, session_id):
     if request.method == "POST":
         session = ChatSession.objects(id=session_id).first()
         sender_id = request.session.get("userid")
+        if not sender_id or not session or sender_id not in [session.buyer_id, session.seller_id]:
+            return redirect("/users/login")
         message_text = request.POST.get("message", "")
 
         file = request.FILES.get("file")
@@ -121,15 +138,24 @@ def chat_dashboard_view(request):
     sessions = ChatSession.objects.filter(
         __raw__={"$or": [{"buyer_id": userid}, {"seller_id": userid}]}
     ).order_by("-created_on")
+
     session_data = []
     for s in sessions:
-        quote = Quote.objects(id=s.quote_id).first()
-        requirement = Requirement.objects(id=quote.req_id).first()
+        quote = None
+        requirement = None
+        try:
+            if getattr(s, 'quote_id', None):
+                quote = Quote.objects(id=str(s.quote_id)).first()
+                if quote and getattr(quote, 'req_id', None):
+                    requirement = Requirement.objects(id=str(quote.req_id)).first()
+        except Exception:
+            quote = None
+            requirement = None
 
         session_data.append({
             "session": s,
             "quote": quote,
-            "requirement":requirement
+            "requirement": requirement,
         })
 
     return render(request, "negotiation/chat_dashboard.html", {

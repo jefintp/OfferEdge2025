@@ -13,50 +13,27 @@
       </div>
     {% endif %}
 
-    <div class="flex justify-between items-center mb-10">
-      <a href="/negotiation/chat/dashboard/"
-         class="inline-flex items-center gap-2 text-blue-700 font-medium bg-blue-50 hover:bg-blue-100 transition-all duration-300 px-4 py-2 rounded-full shadow-sm hover:shadow-md">
-        💬 <span>View All Negotiations</span>
-      </a>
-    </div>
 
-    <!-- Action Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-      <a href="/requirements/post" 
-         class="group block p-6 bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-2xl shadow-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl">
-        <div class="flex items-center space-x-4">
-          <span class="text-4xl group-hover:rotate-6 transition-transform duration-300">💡</span>
-          <div>
-            <span class="text-2xl font-bold block">Post a Requirement</span>
-            <p class="text-blue-100 text-base mt-1">Describe what you need and let sellers bid.</p>
-          </div>
-        </div>
-      </a>
 
-      <a href="/quotes/explore" 
-         class="group block p-6 bg-gradient-to-br from-green-600 to-emerald-700 text-white rounded-2xl shadow-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl">
-        <div class="flex items-center space-x-4">
-          <span class="text-4xl group-hover:rotate-6 transition-transform duration-300">🔍</span>
-          <div>
-            <span class="text-2xl font-bold block">Explore & Bid</span>
-            <p class="text-green-100 text-base mt-1">Browse buyer requests and make your offer.</p>
-          </div>
-        </div>
+    <div class="mb-6">
+      <a href="{% url 'finalized_deals' %}" class="inline-flex items-center gap-2 text-emerald-700 font-medium bg-emerald-50 hover:bg-emerald-100 transition-all duration-300 px-4 py-2 rounded-full shadow-sm hover:shadow-md">
+        ✅ <span>OPEN FINALISED DEALS</span>
       </a>
     </div>
 
     <!-- Requirements Section -->
     <section class="mb-12">
-      <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b-4 border-blue-500 pb-2 flex items-center">
-        <span class="mr-3 text-blue-500 text-2xl">📝</span> Your Posted Requirements
+      <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b-4 border-blue-500 pb-2 flex items-center justify-between">
+        <span class="flex items-center"><span class="mr-3 text-blue-500 text-2xl">📝</span> Your Posted Requirements</span>
+        <a href="{% url 'post_requirement' %}" class="text-sm text-blue-700 hover:underline">Post new</a>
       </h2>
 
       {% if requirements %}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           {% for req in requirements %}
-            <div class="bg-gradient-to-br from-white to-blue-50 border border-gray-200 rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow duration-300 relative">
+            <div class="bg-white border border-gray-200 rounded-xl shadow-md p-6 transition-all duration-200 relative cursor-pointer hover:bg-blue-50 hover:border-blue-200 hover:shadow-lg active:bg-blue-100 active:border-blue-300" onclick="window.location.href='{% url 'requirement_detail' req.id %}'">
               <h3 class="text-xl font-bold text-blue-700 mb-2">
-                <a href="/quotes/for/{{ req.id }}" class="hover:underline">{{ req.title }}</a>
+                <a href="{% url 'requirement_detail' req.id %}" class="hover:underline">{{ req.title }}</a>
               </h3>
               <p class="text-sm text-gray-600 mb-3">{{ req.description|truncatechars:100 }}</p>
               <div class="text-sm text-gray-600 space-y-1 mb-4">
@@ -66,11 +43,8 @@
                 <p class="text-xs text-gray-400">Posted: {{ req.createdAt|date:"M d, Y" }}</p>
               </div>
 
-              <div class="flex justify-between items-center text-sm mb-4">
+              <div class="flex justify-between items-center text-sm mb-0">
                 <p class="text-blue-600 font-semibold">Quotes: {{ req.quotes|length }}</p>
-                <a href="/quotes/for/{{ req.id }}" class="text-blue-500 hover:underline flex items-center">
-                  View Quotes <span class="ml-1">→</span>
-                </a>
               </div>
              
             </div>
@@ -90,18 +64,24 @@
       {% if quote_data %}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           {% for item in quote_data %}
-            {% with quote=item.quote requirement=item.requirement status=item.status %}
-              <div class="quote-card bg-gradient-to-br from-white to-green-50 border
+            {% with quote=item.quote req_id=quote.req_id req_title=item.requirement_title status=item.status %}
+              <div class="quote-card bg-white border
                 {% if status == 'selected' %}
-                  border-green-500
+                  border-green-400
                 {% elif status == 'rejected' %}
-                  border-red-400
+                  border-red-300
                 {% else %}
                   border-gray-200
                 {% endif %}
-                rounded-xl shadow-md p-6 hover:shadow-lg transition-all duration-300">
-                <p class="text-xs text-red-500">Debug status: {{ status }}</p>
-                <h3 class="text-xl font-bold text-green-700 mb-2">{{ requirement.title }}</h3>
+rounded-xl shadow-md p-6 transition-all duration-200 relative {% if req_id %}cursor-pointer hover:bg-green-50 hover:border-green-200 hover:shadow-lg active:bg-green-100 active:border-green-300{% endif %}
+                {% if req_id %}onclick="window.location.href='{% url 'quotes_for_requirement' req_id %}'"{% endif %}>
+
+                <form method="POST" action="{% url 'delete_quote' quote.id %}" onsubmit="return confirm('Delete this quote?');" onclick="event.stopPropagation();" class="absolute top-3 right-3">
+                  {% csrf_token %}
+                  <button type="submit" class="text-red-600 hover:text-red-700" aria-label="Delete quote" onclick="event.stopPropagation();">🗑️</button>
+                </form>
+
+                <h3 class="text-xl font-bold text-green-700 mb-2">{{ req_title }}</h3>
 
                 <div class="text-sm text-gray-600 space-y-1 mb-4">
                   <p><span class="font-semibold">💰 Your Price:</span> ₹{{ quote.price }}</p>
@@ -111,8 +91,9 @@
                 </div>
 
                 {% if chat_enabled_map|get_item:quote.id|stringformat:"s" %}
-                  <a href="/negotiation/chat/start/{{ quote.id }}"
-                     class="inline-flex items-center bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium hover:bg-green-200 transition">
+                  <a href="{% url 'start_chat' quote.id %}"
+                     class="inline-flex items-center bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium hover:bg-green-200 transition"
+                     onclick="event.stopPropagation();">
                     <span class="mr-1">💬</span> Start Negotiation
                   </a>
                 {% endif %}
@@ -136,7 +117,7 @@
         </div>
 
         <div class="text-center mt-8">
-          <a href="/quotes/my" class="inline-flex items-center text-lg text-green-600 font-semibold hover:underline hover:text-green-700 transition-colors duration-300">
+          <a href="{% url 'my_quotes' %}" class="inline-flex items-center text-lg text-green-600 font-semibold hover:underline hover:text-green-700 transition-colors duration-300">
             View All Your Quotes <span class="ml-2">→</span>
           </a>
         </div>

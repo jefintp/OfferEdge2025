@@ -1,18 +1,33 @@
-{% for item in quote_data %}
-  {% with quote=item.quote requirement=item.requirement status=item.status %}
-    <div class="quote-card">
-      <h3 class="text-xl font-bold">{{ requirement.title }}</h3>
-      <p>💰 Price: ₹{{ quote.price }}</p>
-      <p>📦 Delivery: {{ quote.deliveryTimeline }}</p>
-      <p>📝 Notes: {{ quote.notes|truncatechars:50 }}</p>
-
-      {% if status == "selected" %}
-        <span class="badge bg-green-100 text-green-700">✅ Accepted</span>
-      {% elif status == "rejected" %}
-        <span class="badge bg-red-100 text-red-700">❌ Rejected</span>
-      {% else %}
-        <span class="badge bg-yellow-100 text-yellow-700">🟡 In Progress</span>
-      {% endif %}
-    </div>
-  {% endwith %}
-{% endfor %}
+{% extends 'base_logged_in.html' %}
+{% block title %}My Quotes | OfferEdge{% endblock %}
+{% block content %}
+<div class="max-w-6xl mx-auto mt-8">
+  <div class="flex items-center justify-between mb-2">
+    <a href="{% url 'dashboard' %}" onclick="if(history.length>1){history.back();return false;}" class="text-sm text-slate-600 hover:text-slate-800">← Back</a>
+  </div>
+  <h2 class="text-2xl font-bold text-slate-800 mb-6">Your Placed Quotes</h2>
+  <div class="grid gap-6 sm:grid-cols-2">
+  {% for item in quote_data %}
+    {% with quote=item.quote requirement=item.requirement status=item.status %}
+      <div class="bg-white rounded-xl shadow p-5 border border-slate-100">
+        <h3 class="text-lg font-semibold text-slate-900 mb-1 truncate">{{ requirement.title }}</h3>
+        <div class="text-sm text-slate-600 space-y-1 mb-3">
+          <p>💰 Price: ₹{{ quote.price }}</p>
+          <p>📦 Delivery: {{ quote.deliveryTimeline }}</p>
+          <p class="text-xs">📝 {{ quote.notes|default:"—"|truncatechars:80 }}</p>
+        </div>
+        {% if status == "selected" %}
+          <span class="inline-flex items-center bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">✅ Accepted</span>
+        {% elif status == "rejected" %}
+          <span class="inline-flex items-center bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-medium">❌ Rejected</span>
+        {% else %}
+          <span class="inline-flex items-center bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full text-xs font-medium">🟡 In Progress</span>
+        {% endif %}
+      </div>
+    {% endwith %}
+  {% empty %}
+    <div class="col-span-2 text-center text-slate-500 py-12">You haven’t placed any quotes yet.</div>
+  {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -1,23 +1,29 @@
-{% extends 'base.html' %}
+{% extends 'base_logged_in.html' %}
 {% block title %}My Requirements | OfferEdge{% endblock %}
 {% block content %}
-<div class="max-w-3xl mx-auto mt-10">
-  <h2 class="text-2xl font-bold mb-6 text-gray-800">Your Posted Requirements</h2>
-  {% if requirements %}
-    <ul class="space-y-4">
-      {% for req in requirements %}
-        <li class="bg-white p-4 rounded shadow">
-          <h3 class="text-lg font-semibold">{{ req.title }}</h3>
-          <p class="text-sm text-gray-600">{{ req.description }}</p>
-          <p class="text-sm">Quantity: {{ req.quantity }}</p>
-          <p class="text-sm">Expected Price: {{ req.expectedPriceRange }}</p>
-          <p class="text-sm">Deadline: {{ req.deadline }}</p>
-          <p class="text-xs text-gray-400">Posted at: {{ req.createdAt }}</p>
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p class="text-gray-600">You haven’t posted any requirements yet.</p>
-  {% endif %}
+<div class="max-w-5xl mx-auto mt-8">
+  <div class="bg-white/90 backdrop-blur-sm border border-slate-100 shadow rounded-2xl p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-2xl font-bold text-slate-900">Your Posted Requirements</h2>
+      <a href="{% url 'dashboard' %}" class="text-sm text-blue-700 hover:underline">← Back</a>
+    </div>
+    {% if requirements %}
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        {% for req in requirements %}
+          <a href="{% url 'requirement_detail' req.id %}" class="block bg-white border border-slate-200 rounded-xl p-5 hover:bg-blue-50 hover:border-blue-200 transition">
+            <h3 class="text-lg font-semibold text-slate-900">{{ req.title }}</h3>
+            <p class="text-sm text-slate-600 mt-1">{{ req.description|truncatechars:100 }}</p>
+            <div class="mt-3 text-xs text-slate-600 flex flex-wrap gap-2">
+              <span class="bg-slate-100 px-2 py-1 rounded">📦 {{ req.quantity }}</span>
+              <span class="bg-slate-100 px-2 py-1 rounded">💰 {{ req.expectedPriceRange }}</span>
+              <span class="bg-slate-100 px-2 py-1 rounded">⏰ {{ req.deadline }}</span>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-center text-slate-500 py-12">You haven’t posted any requirements yet.</div>
+    {% endif %}
+  </div>
 </div>
 {% endblock %}

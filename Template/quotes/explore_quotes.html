@@ -1,17 +1,28 @@
 {% extends 'base_logged_in.html' %}
 {% block title %}Explore Requirements | OfferEdge{% endblock %}
 {% block content %}
-<div class="max-w-3xl mx-auto mt-10">
-  <h2 class="text-2xl font-bold mb-6 text-gray-800">Open Buyer Requirements</h2>
-  {% for req in requirements %}
-    <div class="bg-white p-4 rounded shadow mb-4">
-      <h3 class="text-lg font-semibold">{{ req.title }}</h3>
-      <p>{{ req.description }}</p>
-      <p>Quantity: {{ req.quantity }}</p>
-      <p>Expected Price: {{ req.expectedPriceRange }}</p>
-      <p>Deadline: {{ req.deadline }}</p>
-      <a href="/quotes/place/{{ req.id }}" class="text-blue-600 hover:underline">Place a Quote</a>
+<div class="max-w-6xl mx-auto mt-8">
+  <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-3">
+      <a href="{% url 'dashboard' %}" onclick="if(history.length>1){history.back();return false;}" class="inline-flex items-center text-sm text-slate-600 hover:text-slate-800">← Back</a>
+      <h2 class="text-2xl font-bold text-slate-800">Open Buyer Requirements</h2>
     </div>
-  {% endfor %}
+  </div>
+  <div class="grid gap-6 sm:grid-cols-2">
+    {% for req in requirements %}
+      <div class="bg-white rounded-xl shadow hover:shadow-lg transition p-5 border border-slate-100">
+        <h3 class="text-lg font-semibold text-slate-900 mb-1 truncate">{{ req.title }}</h3>
+        <p class="text-sm text-slate-600 mb-3 overflow-hidden max-h-12">{{ req.description }}</p>
+        <div class="flex flex-wrap gap-2 text-xs text-slate-600 mb-4">
+          <span class="inline-flex items-center gap-1 bg-slate-100 px-2 py-1 rounded">📦 {{ req.quantity }}</span>
+          <span class="inline-flex items-center gap-1 bg-slate-100 px-2 py-1 rounded">💰 {{ req.expectedPriceRange }}</span>
+          <span class="inline-flex items-center gap-1 bg-slate-100 px-2 py-1 rounded">⏰ {{ req.deadline }}</span>
+        </div>
+        <a href="{% url 'place_quote' req.id %}" class="inline-flex items-center bg-emerald-600 text-white px-3 py-2 rounded-md text-sm hover:bg-emerald-700">Place a Quote</a>
+      </div>
+    {% empty %}
+      <div class="col-span-2 text-center text-slate-500 py-12">No open requirements found.</div>
+    {% endfor %}
+  </div>
 </div>
 {% endblock %}

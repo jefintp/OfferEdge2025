@@ -12,24 +12,22 @@
   <form method="POST" action="{% url 'login' %}" class="space-y-6">
     {% csrf_token %}
 
-    <!-- User ID Field -->
     <div>
       <label for="userid" class="block text-sm font-medium text-gray-700 mb-1">User ID</label>
-      <input type="text" id="userid" name="userid" placeholder="User ID" required class="w-full border rounded px-3 py-2">
+      <input type="text" id="userid" name="userid" placeholder="User ID" required class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
     </div>
 
-    <!-- Password Field -->
     <div>
       <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-      <input type="password" id="password" name="password" placeholder="Password" required class="w-full border rounded px-3 py-2">
+      <input type="password" id="password" name="password" placeholder="Password" required class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
     </div>
 
     <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Login</button>
   </form>
 
-  <p class="text-sm text-center text-gray-600 mt-6">
-    New to OfferEdge?
-    <a href="{% url 'signup' %}" class="text-blue-600 hover:underline font-medium">Create an account</a>
-  </p>
+  <div class="flex items-center justify-between mt-6 text-sm">
+    <a href="{% url 'home' %}" class="text-gray-500 hover:underline">← Back to Home</a>
+    <span class="text-gray-600">New to OfferEdge? <a href="{% url 'signup' %}" class="text-blue-600 hover:underline font-medium">Create an account</a></span>
+  </div>
 </div>
 {% endblock %}

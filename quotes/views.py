@@ -3,6 +3,7 @@ from .forms import QuoteForm
 from quotes.models import Quote
 from requirements.models import Requirement
 from deals.models import Deal
+from django.views.decorators.http import require_POST
 
 # 🔍 Explore all posted requirements
 def explore_requirements_view(request):
@@ -151,3 +152,28 @@ def quotes_for_requirement_view(request, reqid):
         "quote_status_map": quote_status_map,
         "userid": userid
     })
+
+
+@require_POST
+def delete_quote_view(request, quote_id):
+    if 'userid' not in request.session:
+        return redirect('/users/login')
+
+    user = request.session.get('userid')
+    is_admin = bool(request.session.get('is_admin'))
+
+    quote = Quote.objects(id=quote_id).first()
+    if not quote:
+        return redirect('/users/dashboard')
+
+    # Allow only owner or admin to delete
+    if not is_admin and quote.seller_id != user:
+        return redirect('/users/dashboard')
+
+    # Optional: block deletion if finalized/deal exists
+    deal = Deal.objects(quote_id=str(quote.id)).first()
+    if deal:
+        return redirect('/users/dashboard')
+
+    quote.delete()
+    return redirect('/users/dashboard')

@@ -11,11 +11,20 @@
 
     <!-- 🔹 USER MANAGEMENT -->
     <section class="mb-12 bg-white/90 backdrop-blur-sm shadow-lg border border-blue-100 rounded-2xl p-6">
-      <div class="flex justify-between items-center mb-4">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
         <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
           👥 All Users
         </h2>
-        <span class="text-sm text-gray-500">{{ users|length }} users total</span>
+        <div class="flex items-center gap-3 w-full md:w-auto">
+          <form method="GET" action="{% url 'moderation_dashboard' %}" class="flex-1 md:flex-initial flex items-center gap-2">
+            <input type="text" name="q" value="{{ q|default:'' }}" placeholder="Search by user id" class="w-full md:w-64 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Search</button>
+          </form>
+          {% if q %}
+            <a href="{% url 'moderation_dashboard' %}" class="text-sm text-gray-600 hover:underline">Clear</a>
+          {% endif %}
+          <span class="text-sm text-gray-500">{{ users|length }} users total</span>
+        </div>
       </div>
       <div class="overflow-x-auto">
         <table class="min-w-full border-collapse text-sm">
@@ -30,32 +39,46 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
-            {% for user in users %}
-            <tr class="hover:bg-gray-50 transition-colors duration-150">
-              <td class="px-4 py-3 font-medium text-gray-700">{{ user.userid }}</td>
-              <td class="px-4 py-3">{% if user.is_buyer %}✅{% else %}<span class="text-gray-400">—</span>{% endif %}</td>
-              <td class="px-4 py-3">{% if user.is_seller %}✅{% else %}<span class="text-gray-400">—</span>{% endif %}</td>
-              <td class="px-4 py-3">{% if user.is_admin %}🛡️{% else %}<span class="text-gray-400">—</span>{% endif %}</td>
-              <td class="px-4 py-3 text-red-500 font-semibold">{% if user.is_banned %}🚫{% else %}<span class="text-gray-400">—</span>{% endif %}</td>
+            {% if q %}
+              {% for user in users %}
+              <tr class="hover:bg-gray-50 transition-colors duration-150">
+                <td class="px-4 py-3 font-medium text-gray-700">{{ user.userid }}</td>
+                <td class="px-4 py-3">{% if user.is_buyer %}✅{% else %}<span class="text-gray-400">—</span>{% endif %}</td>
+                <td class="px-4 py-3">{% if user.is_seller %}✅{% else %}<span class="text-gray-400">—</span>{% endif %}</td>
+                <td class="px-4 py-3">{% if user.is_admin %}🛡️{% else %}<span class="text-gray-400">—</span>{% endif %}</td>
+                <td class="px-4 py-3 text-red-500 font-semibold">{% if user.is_banned %}🚫{% else %}<span class="text-gray-400">—</span>{% endif %}</td>
               <td class="px-4 py-3 space-y-1">
-                {% if user.is_banned %}
-                <form method="POST" action="/moderator/unban_user/{{ user.id }}">
-                  {% csrf_token %}
-                  <button class="text-green-600 hover:text-green-700 font-medium">Unban</button>
-                </form>
+                {% if user.is_admin or user.userid == 'admin' %}
+                  <span class="text-gray-400">Admin (actions disabled)</span>
                 {% else %}
-                <form method="POST" action="/moderator/ban_user/{{ user.id }}">
-                  {% csrf_token %}
-                  <button class="text-red-600 hover:text-red-700 font-medium">Ban</button>
-                </form>
+                  {% if user.is_banned %}
+                  <form method="POST" action="{% url 'unban_user' user.userid %}">
+                    {% csrf_token %}
+                    <button class="text-green-600 hover:text-green-700 font-medium">Unban</button>
+                  </form>
+                  {% else %}
+                  <form method="POST" action="{% url 'ban_user' user.userid %}">
+                    {% csrf_token %}
+                    <button class="text-red-600 hover:text-red-700 font-medium">Ban</button>
+                  </form>
+                  {% endif %}
+                  <form method="POST" action="{% url 'delete_user' user.userid %}">
+                    {% csrf_token %}
+                    <button class="text-gray-600 hover:text-gray-800 font-medium">Delete</button>
+                  </form>
                 {% endif %}
-                <form method="POST" action="/moderator/delete_user/{{ user.id }}">
-                  {% csrf_token %}
-                  <button class="text-gray-600 hover:text-gray-800 font-medium">Delete</button>
-                </form>
               </td>
-            </tr>
-            {% endfor %}
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="6" class="px-4 py-6 text-center text-gray-500">No users found.</td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="6" class="px-4 py-6 text-center text-gray-500">Search by user id to view results.</td>
+              </tr>
+            {% endif %}
           </tbody>
         </table>
       </div>
@@ -80,7 +103,7 @@
           {% endif %}
           
           <div class="mt-4 flex flex-wrap gap-4">
-            <form method="POST" action="/requirements/delete/{{ req.id }}" onsubmit="return confirm('Delete this requirement?');">
+            <form method="POST" action="{% url 'mod_delete_requirement' req.id %}" onsubmit="return confirm('Delete this requirement and related quotes/deals?');">
               {% csrf_token %}
               <button class="inline-flex items-center gap-1 text-red-600 font-semibold hover:underline">
                 🗑️ Delete
@@ -121,7 +144,7 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
-            {% for quote in quotes %}
+            {% for quote in quote_rows %}
             <tr class="hover:bg-gray-50 transition-colors duration-150 {% if quote.finalized %}bg-green-50{% endif %}">
               <td class="px-4 py-3 font-medium text-gray-700">{{ quote.id }}</td>
               <td class="px-4 py-3">{{ quote.req_title|default:"(untitled)" }}</td>
@@ -130,12 +153,12 @@
               <td class="px-4 py-3">{% if quote.finalized %}✅{% else %}<span class="text-gray-400">—</span>{% endif %}</td>
               <td class="px-4 py-3 space-x-3">
                 {% if not quote.finalized %}
-                <form method="POST" action="/moderator/finalize_quote/{{ quote.id }}" class="inline">
+                <form method="POST" action="{% url 'mod_finalize_quote' quote.id %}" class="inline" onsubmit="return confirm('Finalize this quote?');">
                   {% csrf_token %}
                   <button class="text-green-600 hover:text-green-700 font-medium">Finalize</button>
                 </form>
                 {% endif %}
-                <form method="POST" action="/moderator/delete_quote/{{ quote.id }}" class="inline">
+                <form method="POST" action="{% url 'mod_delete_quote' quote.id %}" class="inline" onsubmit="return confirm('Delete this quote?');">
                   {% csrf_token %}
                   <button class="text-red-600 hover:text-red-700 font-medium">Delete</button>
                 </form>

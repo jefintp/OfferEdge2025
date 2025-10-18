@@ -1,0 +1,57 @@
+{% extends 'base_logged_in.html' %}
+{% load custom_filters %}
+{% block title %}Deal Chat{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto mt-8 bg-white rounded-lg shadow p-6">
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="text-xl font-bold">Deal Chat</h2>
+    <div>
+      <form method="post" action="/deals/{{ deal.id }}/close/" class="inline">
+        {% csrf_token %}
+        {% if deal.status == 'finalized' and request.session.is_admin %}
+          <button class="px-3 py-1 bg-red-600 text-white rounded">Archive</button>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+
+  <div id="chat-messages" class="space-y-2 mb-4 max-h-96 overflow-y-auto border p-4 rounded bg-gray-50">
+    {% for m in messages %}
+      <div class="flex {% if m.sender_id == userid %}justify-end{% else %}justify-start{% endif %}">
+        <div class="max-w-xl px-3 py-2 rounded {% if m.sender_id == userid %}bg-blue-100{% else %}bg-gray-100{% endif %}">
+          <div class="text-xs text-gray-500">{% if m.sender_id == userid %}You{% else %}{{ m.sender_id }}{% endif %} • {{ m.created_at|date:"M d, Y H:i" }}</div>
+          <div class="whitespace-pre-wrap">{{ m.body }}</div>
+          {% if m.contact %}
+            <pre class="mt-1 text-xs bg-white border rounded p-2">{{ m.contact|pretty_json }}</pre>
+          {% endif %}
+          {% if m.file_id %}
+            {% if m.file_id|is_image %}
+              <div class="mt-2"><img src="{{ m.file_id }}" alt="attachment" class="max-h-56 rounded border" /></div>
+            {% else %}
+              <a href="{{ m.file_id }}" target="_blank" class="mt-2 inline-block text-xs text-indigo-700 underline">Download file</a>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+    {% empty %}
+      <div class="text-center text-gray-500">No messages yet.</div>
+    {% endfor %}
+  </div>
+
+  {% if deal.status == 'finalized' %}
+  <form method="post" action="/deals/{{ deal.id }}/chat/send/" class="space-y-3" enctype="multipart/form-data">
+    {% csrf_token %}
+    <textarea name="body" placeholder="Type your message..." class="w-full border px-3 py-2 rounded" rows="2"></textarea>
+    <div class="flex items-center gap-3">
+      <label class="text-sm text-gray-700">Share file/image
+        <input type="file" name="file" class="block text-sm" />
+      </label>
+      <button class="bg-blue-600 text-white px-4 py-2 rounded">Send</button>
+    </div>
+  </form>
+  {% else %}
+  <div class="text-center text-gray-500">Chat archived.</div>
+  {% endif %}
+</div>
+{% endblock %}
+

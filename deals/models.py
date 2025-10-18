@@ -34,3 +34,11 @@ class Deal(Document):
     finalized_by = StringField()
     method = StringField(choices=["auto", "manual"])
     status = StringField(default="finalized")
+
+    meta = {
+        'indexes': [
+            'buyer_id',
+            'seller_id',
+            '-finalized_on',
+        ]
+    }

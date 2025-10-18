@@ -3,26 +3,33 @@
 {% block title %}Quotes for {{ requirement.title }} | OfferEdge{% endblock %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto mt-10">
-  <h2 class="text-2xl font-bold text-gray-800 mb-4">Quotes for: {{ requirement.title }}</h2>
-  <p class="text-gray-600 mb-6">{{ requirement.description }}</p>
+<div class="max-w-4xl mx-auto mt-8">
+  <div class="bg-white/90 backdrop-blur-sm border border-slate-100 shadow rounded-2xl p-6">
+    <div class="flex items-start justify-between mb-4">
+      <div>
+        <h2 class="text-2xl font-bold text-slate-900">{{ requirement.title }}</h2>
+        <p class="text-slate-600 mt-1">{{ requirement.description }}</p>
+      </div>
+      <a href="{% url 'dashboard' %}" class="text-sm text-blue-700 hover:underline">← Back to Dashboard</a>
+    </div>
 
-  {% if quotes %}
-    <ul class="space-y-4">
-      {% with finalized_id=finalized_quote_id|stringformat:"s" %}
-        {% for quote in quotes %}
-          {% with quote_id_str=quote.id|stringformat:"s" %}
-            {% if quote_id_str == finalized_id %}
-              {% include "partials/quote_card.html" with quote=quote finalized="True" req=requirement userid=userid finalized_quote_id=finalized_id %}
-            {% else %}
-              {% include "partials/quote_card.html" with quote=quote finalized="False" req=requirement userid=userid finalized_quote_id=finalized_id %}
-            {% endif %}
-          {% endwith %}
-        {% endfor %}
-      {% endwith %}
-    </ul>
-  {% else %}
-    <p class="text-gray-600">No quotes have been placed yet.</p>
-  {% endif %}
+    {% if quotes %}
+      <ul class="space-y-4">
+        {% with finalized_id=finalized_quote_id|stringformat:"s" %}
+          {% for quote in quotes %}
+            {% with quote_id_str=quote.id|stringformat:"s" %}
+              {% if quote_id_str == finalized_id %}
+                {% include "partials/quote_card.html" with quote=quote finalized="True" req=requirement userid=userid finalized_quote_id=finalized_id %}
+              {% else %}
+                {% include "partials/quote_card.html" with quote=quote finalized="False" req=requirement userid=userid finalized_quote_id=finalized_id %}
+              {% endif %}
+            {% endwith %}
+          {% endfor %}
+        {% endwith %}
+      </ul>
+    {% else %}
+      <div class="text-center text-slate-500 py-12">No quotes have been placed yet.</div>
+    {% endif %}
+  </div>
 </div>
 {% endblock %}

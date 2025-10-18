@@ -2,7 +2,10 @@ from django.shortcuts import render, redirect
 from .forms import RequirementForm
 from .models import Requirement
 from datetime import datetime
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from requirements.utils import delete_requirement_and_related
+from quotes.models import Quote
+
 
 def post_requirement_view(request):
     if 'userid' not in request.session:
@@ -43,27 +46,40 @@ def my_requirements_view(request):
     return render(request, 'requirements/my_requirements.html', {'requirements': reqs})
 
 
+def requirement_detail_view(request, reqid):
+    if 'userid' not in request.session:
+        return redirect('/users/login')
+
+    req = Requirement.objects(id=reqid).first()
+    if not req:
+        return redirect('/users/dashboard')
+
+    quotes = Quote.objects(req_id=str(req.id)).order_by('-createdon')
+    quotes_count = quotes.count()
+
+    can_delete = request.session.get('userid') == req.buyerid or bool(request.session.get('is_admin'))
+
+    return render(request, 'requirements/detail.html', {
+        'requirement': req,
+        'quotes': quotes,
+        'quotes_count': quotes_count,
+        'can_delete': can_delete,
+    })
 
 
-@csrf_exempt  # Remove once CSRF is fully wired
+
+
+@require_POST
 def delete_requirement_view(request, reqid):
     if 'userid' not in request.session:
         return redirect('/users/login')
 
-    # Debug: print session flags
-    print("Session userid:", request.session.get('userid'))
-    print("Session is_admin:", request.session.get('is_admin'))
+    userid = request.session.get('userid')
+    is_admin = bool(request.session.get('is_admin'))
 
-    # Ensure admin-only access
-    if not bool(request.session.get('is_admin')):  # robust check
-        return redirect('/moderation/')  # fallback to moderation, not dashboard
-
-    # Delete the requirement
-    Requirement.objects(id=reqid).delete()
-    return redirect('/moderation/')
-    print("Request method:", request.method)
-    print("Deleting reqid:", reqid)
-    print("Found:", Requirement.objects(id=reqid).first())
+    ok, msg = delete_requirement_and_related(req_id=reqid, user_id=userid, is_admin=is_admin)
+    # Optionally, you could set a flash message here via session
+    return redirect('/users/dashboard')
 
 
 

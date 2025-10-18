@@ -30,20 +30,20 @@
       {% csrf_token %}
       <div>
         <label for="userid" class="block text-sm font-medium text-gray-700 mb-1">User ID</label>
-        <input type="text" name="userid" id="userid" required class="w-full p-2 border rounded" />
+        <input type="text" name="userid" id="userid" required class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
       </div>
       <div>
         <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-        <input type="password" name="password" id="password" required class="w-full p-2 border rounded" />
+        <input type="password" name="password" id="password" required class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
       </div>
       <button type="submit"
         class="w-full bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700 transition">Sign Up</button>
     </form>
 
-    <p class="text-sm text-center text-gray-600 mt-6">
-      Already have an account?
-      <a href="{% url 'login' %}" class="text-blue-600 hover:underline font-medium">Login</a>
-    </p>
+    <div class="flex items-center justify-between mt-6 text-sm">
+      <a href="{% url 'home' %}" class="text-gray-500 hover:underline">← Back to Home</a>
+      <span class="text-gray-600">Already have an account? <a href="{% url 'login' %}" class="text-blue-600 hover:underline font-medium">Login</a></span>
+    </div>
   </div>
 </main>
 {% endblock %}

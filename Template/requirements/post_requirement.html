@@ -3,8 +3,11 @@
 {% block title %}Post Requirement | OfferEdge{% endblock %}
 
 {% block content %}
-<div class="max-w-xl mx-auto mt-12 bg-white p-8 rounded-lg shadow-md">
-  <h2 class="text-3xl font-bold mb-8 text-center text-blue-600">Post a Requirement</h2>
+<div class="max-w-2xl mx-auto mt-10 bg-white/90 backdrop-blur-sm border border-slate-100 p-8 rounded-2xl shadow">
+  <div class="mb-2 flex justify-between">
+    <a href="{% url 'dashboard' %}" onclick="if(history.length>1){history.back();return false;}" class="text-sm text-slate-600 hover:text-slate-800">← Back</a>
+  </div>
+  <h2 class="text-3xl font-bold mb-6 text-center bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent">Post a Requirement</h2>
 
   <!-- ✅ Add enctype for file upload -->
   <form method="POST" enctype="multipart/form-data" class="space-y-6">
@@ -12,49 +15,49 @@
 
     <!-- 📦 Requirement Fields -->
     <div>
-      <label class="block font-semibold mb-1">{{ form.title.label }}</label>
-      {{ form.title|add_class:"w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+      <label class="block text-sm font-semibold mb-1 text-slate-700">{{ form.title.label }}</label>
+      {{ form.title|add_class:"w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
     </div>
 
     <div>
-      <label class="block font-semibold mb-1">{{ form.description.label }}</label>
-      {{ form.description|add_class:"w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+      <label class="block text-sm font-semibold mb-1 text-slate-700">{{ form.description.label }}</label>
+      {{ form.description|add_class:"w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
     </div>
 
     <div>
-      <label class="block font-semibold mb-1">{{ form.quantity.label }}</label>
-      {{ form.quantity|add_class:"w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+      <label class="block text-sm font-semibold mb-1 text-slate-700">{{ form.quantity.label }}</label>
+      {{ form.quantity|add_class:"w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
     </div>
 
     <div>
-      <label class="block font-semibold mb-1">{{ form.expectedPriceRange.label }}</label>
-      {{ form.expectedPriceRange|add_class:"w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+      <label class="block text-sm font-semibold mb-1 text-slate-700">{{ form.expectedPriceRange.label }}</label>
+      {{ form.expectedPriceRange|add_class:"w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
     </div>
 
     <div>
-      <label class="block font-semibold mb-1">{{ form.deadline.label }}</label>
-      {{ form.deadline|add_class:"w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+      <label class="block text-sm font-semibold mb-1 text-slate-700">{{ form.deadline.label }}</label>
+      {{ form.deadline|add_class:"w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
     </div>
 
     <!-- 📎 File Upload -->
     <div>
-      <label class="block font-semibold mb-1">{{ form.attachment.label }}</label>
-      {{ form.attachment|add_class:"w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+      <label class="block text-sm font-semibold mb-1 text-slate-700">{{ form.attachment.label }}</label>
+      {{ form.attachment|add_class:"w-full border border-slate-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" }}
     </div>
 
     <!-- 🔄 Negotiation Preference -->
     <div>
-      <label class="block font-semibold mb-2">Negotiation Preference</label>
-      {{ form.negotiation_mode }}
+      <label class="block text-sm font-semibold mb-2 text-slate-700">Negotiation Preference</label>
+      <div class="space-y-2 p-3 bg-slate-50 rounded-lg border border-slate-200">{{ form.negotiation_mode }}</div>
     </div>
 
     <!-- 💬 Trigger Price (conditional) -->
     <div id="negotiation-trigger" class="hidden">
-      <label class="block font-semibold mb-2">Enable Negotiation Below Price</label>
-      {{ form.negotiation_trigger_price|add_class:"w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+      <label class="block text-sm font-semibold mb-2 text-slate-700">Enable Negotiation Below Price</label>
+      {{ form.negotiation_trigger_price|add_class:"w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
     </div>
 
-    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700 transition">
+    <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-semibold shadow hover:from-blue-700 hover:to-indigo-700 transition">
       Submit
     </button>
   </form>
