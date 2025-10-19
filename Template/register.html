@@ -2,42 +2,31 @@
 {% block title %}Sign Up | OfferEdge{% endblock %}
 
 {% block content %}
-<main class="flex items-center justify-center min-h-screen px-4">
-  <div class="bg-white shadow-lg rounded-xl p-8 w-full max-w-md">
-    <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Create Your OfferEdge Account</h2>
+<section class="relative min-h-[60vh] flex items-center justify-center px-4 py-10">
+  <div class="absolute inset-0 -z-10">
+    <img src="https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?q=80&w=1600&auto=format&fit=crop" alt="background" class="w-full h-full object-cover opacity-15">
+    <div class="absolute inset-0 bg-gradient-to-br from-white/90 via-blue-50/80 to-indigo-50/70"></div>
+  </div>
 
-    <!-- 🔗 Google Sign Up Button -->
-    <div class="mb-6">
-      <button type="button"
-        class="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 py-2 rounded-md hover:bg-gray-100 transition">
-        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg" alt="Google" class="w-5 h-5" />
-        <span class="text-sm font-medium text-gray-700">Sign Up with Google</span>
-      </button>
-    </div>
-
-    <div class="flex items-center mb-6">
-      <hr class="flex-grow border-gray-300" />
-      <span class="px-3 text-sm text-gray-500">or</span>
-      <hr class="flex-grow border-gray-300" />
-    </div>
+  <div class="w-full max-w-md bg-white/90 backdrop-blur-sm border border-slate-100 p-8 rounded-2xl shadow-xl">
+    <h2 class="text-3xl font-extrabold text-center bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent mb-6">Create Your OfferEdge Account</h2>
 
     {% if error %}
-      <p class="text-red-600 text-sm mb-4">{{ error }}</p>
+      <p class="text-red-600 text-sm mb-4 text-center">{{ error }}</p>
     {% endif %}
 
-    <!-- 📝 Custom Sign Up Form -->
     <form action="{% url 'signup' %}" method="POST" class="space-y-5">
       {% csrf_token %}
       <div>
-        <label for="userid" class="block text-sm font-medium text-gray-700 mb-1">User ID</label>
-        <input type="text" name="userid" id="userid" required class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <label for="userid" class="block text-sm font-medium text-slate-700 mb-1">User ID</label>
+        <input type="text" name="userid" id="userid" required class="w-full p-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
       </div>
       <div>
-        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-        <input type="password" name="password" id="password" required class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <label for="password" class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+        <input type="password" name="password" id="password" required class="w-full p-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
       </div>
       <button type="submit"
-        class="w-full bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700 transition">Sign Up</button>
+        class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-semibold shadow hover:from-blue-700 hover:to-indigo-700 transition">Sign Up</button>
     </form>
 
     <div class="flex items-center justify-between mt-6 text-sm">
@@ -45,5 +34,5 @@
       <span class="text-gray-600">Already have an account? <a href="{% url 'login' %}" class="text-blue-600 hover:underline font-medium">Login</a></span>
     </div>
   </div>
-</main>
+</section>
 {% endblock %}

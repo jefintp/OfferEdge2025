@@ -7,33 +7,63 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Inter', sans-serif; }
+    :root{
+      --of-primary: #2563eb; /* blue-600 */
+      --of-primary-500: #3b82f6; /* blue-500 */
+      --of-indigo: #4f46e5; /* indigo-600 */
+      --of-bg: #f8fafc; /* slate-50 */
+      --of-card: rgba(255,255,255,0.9);
+      --of-border: #e5e7eb; /* slate-200 */
+    }
+    html{scroll-behavior:smooth}
+    body{font-family:'Inter',sans-serif}
+    ::selection{background:rgba(59,130,246,.2)}
+    *:focus-visible{outline:2px solid var(--of-primary-500); outline-offset:2px; border-radius:8px}
+    ::-webkit-scrollbar{height:10px;width:10px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--of-primary-500),var(--of-indigo));border-radius:9999px}
+    .card{background:var(--of-card); backdrop-filter:saturate(150%) blur(8px); border:1px solid var(--of-border); border-radius:16px; box-shadow:0 8px 30px rgba(2,6,23,.06)}
+    .btn{display:inline-flex;align-items:center;gap:.5rem;border-radius:9999px;padding:.5rem 1rem;font-weight:600;transition:all .2s ease}
+    .btn-primary{color:#fff;background:linear-gradient(90deg,var(--of-primary),var(--of-indigo))}
+    .btn-primary:hover{filter:brightness(1.05)}
+    .btn-ghost{color:var(--of-primary);background:rgba(37,99,235,.08)}
+    .btn-ghost:hover{background:rgba(37,99,235,.14)}
+    .input{border:1px solid var(--of-border);border-radius:12px;padding:.6rem .8rem}
   </style>
 </head>
-<body class="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 text-gray-800">
+<body class="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 via-white to-slate-100 text-gray-800">
 
 <!-- 🔐 Logged-in Navbar -->
-<header class="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur">
+<header class="sticky top-0 z-50 border-b border-slate-200 bg-gradient-to-r from-indigo-200/60 via-blue-100/50 to-blue-50/40 backdrop-blur">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
 <a href="{% url 'dashboard' %}" class="flex items-center group" aria-label="Go to dashboard">
-      <span class="text-2xl font-extrabold text-blue-600 group-hover:tracking-wide transition">Offer</span><span class="text-2xl font-extrabold text-blue-800">Edge</span>
+      <span class="text-3xl font-extrabold text-blue-600 group-hover:tracking-wide transition">Offer</span><span class="text-3xl font-extrabold text-blue-800">Edge</span>
     </a>
-    <nav class="flex flex-wrap items-center gap-3 sm:gap-5 text-[15px] font-medium text-slate-700">
-      <a href="{% url 'dashboard' %}" class="hover:text-blue-700">Dashboard</a>
-      <a href="{% url 'post_requirement' %}" class="hover:text-blue-700">Post</a>
-      <a href="{% url 'explore_quotes' %}" class="hover:text-blue-700">Explore</a>
-      <a href="{% url 'finalized_deals' %}" class="hover:text-blue-700">Finalized</a>
-      <a href="{% url 'chat_dashboard' %}" class="hover:text-blue-700">Negotiations</a>
+    <nav class="flex flex-wrap items-center gap-4 sm:gap-6 text-base font-medium text-slate-700">
+      <a href="{% url 'dashboard' %}" class="text-blue-700 bg-blue-50 px-3 py-1 rounded-full hover:bg-blue-100">Dashboard</a>
+      <a href="{% url 'post_requirement' %}" class="text-blue-700 bg-blue-50 px-3 py-1 rounded-full hover:bg-blue-100">Post</a>
+      <a href="{% url 'explore_quotes' %}" class="text-blue-700 bg-blue-50 px-3 py-1 rounded-full hover:bg-blue-100">Explore</a>
+      <a href="{% url 'finalized_deals' %}" class="text-blue-700 bg-blue-50 px-3 py-1 rounded-full hover:bg-blue-100">Finalized</a>
+      <a href="{% url 'chat_dashboard' %}" class="text-blue-700 bg-blue-50 px-3 py-1 rounded-full hover:bg-blue-100">Negotiations</a>
       {% if request.session.userid %}
-      <span class="text-blue-800 font-semibold bg-blue-50 px-3 py-1.5 rounded-full">👋 {{ request.session.userid }}</span>
+      <div id="user-menu" class="relative">
+        <button id="user-menu-toggle" type="button" class="flex items-center gap-2 focus:outline-none">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center text-sm font-semibold">
+            {{ request.session.userid|first|upper }}
+          </div>
+          <span class="inline font-semibold text-white bg-blue-700 px-3 py-1.5 rounded-full shadow-sm">{{ request.session.userid }}</span>
+        </button>
+        <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-40 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-30">
+          <a href="{% url 'logout' %}" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Log Out</a>
+        </div>
+      </div>
       {% endif %}
-      <a href="{% url 'logout' %}" class="inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded-full shadow hover:bg-blue-700">Log Out</a>
     </nav>
   </div>
 </header>
 
 <!-- 🔄 Page Content -->
-<main class="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+<main class="flex-1 max-w-6xl mx-auto px-4 sm:px-6 py-10 w-full">
   {% block content %}{% endblock %}
 </main>
 
@@ -43,4 +73,17 @@
 
 </body>
 <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+<script>
+  // Toggle user dropdown and close on outside click
+  (function(){
+    const wrap = document.getElementById('user-menu');
+    if (!wrap) return;
+    const btn = document.getElementById('user-menu-toggle');
+    const dd = document.getElementById('user-menu-dropdown');
+    btn.addEventListener('click', function(e){ e.stopPropagation(); dd.classList.toggle('hidden'); });
+    document.addEventListener('click', function(e){
+      if (!wrap.contains(e.target)) dd.classList.add('hidden');
+    });
+  })();
+</script>
 </html>

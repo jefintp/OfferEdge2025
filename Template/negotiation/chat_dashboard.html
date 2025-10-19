@@ -1,38 +1,59 @@
 {% extends 'base_logged_in.html' %}
 {% block title %}Your Negotiations | OfferEdge{% endblock %}
 {% block content %}
-<div class="max-w-3xl mx-auto mt-10 bg-white p-6 rounded-lg shadow-md">
-  <h2 class="text-2xl font-bold text-blue-600 mb-6">Your Negotiation Sessions</h2>
+<div class="max-w-3xl mx-auto mt-10 bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow border border-slate-100">
+  <h2 class="text-2xl font-bold text-slate-800 mb-6">Your Negotiations</h2>
 
-  <ul class="space-y-4">
-    {% for item in session_data %}
-      {% with session=item.session quote=item.quote requirement=item.requirement %}
-        {% if quote and requirement %}
-          <li class="border p-4 rounded-lg shadow-sm hover:shadow-md transition">
-            <div class="flex justify-between items-center">
-              <div>
-                <p class="font-semibold text-gray-800">
-                  {{ requirement.title|default:"Untitled Requirement" }}
-                </p>
-                <p class="text-sm text-gray-500">
-                  Started: {{ session.created_on|date:"M d, Y H:i" }}
-                </p>
+  {% if session_data %}
+    <div class="space-y-8">
+      <section>
+        <h3 class="text-lg font-semibold text-slate-800 mb-3">Buy</h3>
+        <ul class="space-y-3">
+          {% for item in session_data %}
+            {% if item.role == 'buyer' %}
+            {% with session=item.session quote=item.quote requirement=item.requirement %}
+            {% if quote and requirement %}
+            <li class="p-4 rounded-xl bg-gradient-to-br from-white to-blue-50 border border-blue-100 shadow hover:shadow-lg transition">
+              <div class="flex justify-between items-center">
+                <div>
+                  <p class="font-semibold text-slate-900">{{ requirement.title|default:"Untitled Requirement" }}</p>
+                  <p class="text-xs text-slate-500 mt-1">Started: {{ session.created_on|date:"M d, Y H:i" }}</p>
+                </div>
+                <a href="/negotiation/chat/{{ session.id }}/" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Open Chat</a>
               </div>
-              <a href="/negotiation/chat/{{ session.id }}/"
-                 class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                Open Chat
-              </a>
-            </div>
-          </li>
-        {% else %}
-          <li class="border p-4 rounded-lg bg-red-50 text-red-700">
-            Quote or requirement not found for session {{ session.id }}
-          </li>
-        {% endif %}
-      {% endwith %}
-    {% empty %}
-      <p class="text-gray-500">No negotiation sessions found.</p>
-    {% endfor %}
-  </ul>
+            </li>
+            {% endif %}
+            {% endwith %}
+            {% endif %}
+          {% endfor %}
+        </ul>
+      </section>
+
+      <section>
+        <h3 class="text-lg font-semibold text-slate-800 mb-3">Sell</h3>
+        <ul class="space-y-3">
+          {% for item in session_data %}
+            {% if item.role == 'seller' %}
+            {% with session=item.session quote=item.quote requirement=item.requirement %}
+            {% if quote and requirement %}
+            <li class="p-4 rounded-xl bg-gradient-to-br from-white to-emerald-50 border border-emerald-100 shadow hover:shadow-lg transition">
+              <div class="flex justify-between items-center">
+                <div>
+                  <p class="font-semibold text-slate-900">{{ requirement.title|default:"Untitled Requirement" }}</p>
+                  <p class="text-xs text-slate-500 mt-1">Started: {{ session.created_on|date:"M d, Y H:i" }}</p>
+                </div>
+                <a href="/negotiation/chat/{{ session.id }}/" class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700">Open Chat</a>
+              </div>
+            </li>
+            {% endif %}
+            {% endwith %}
+            {% endif %}
+          {% endfor %}
+        </ul>
+      </section>
+    </div>
+  {% else %}
+    <p class="text-gray-500">No negotiations yet.</p>
+  {% endif %}
 </div>
 {% endblock %}

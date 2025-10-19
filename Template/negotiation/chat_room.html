@@ -2,14 +2,19 @@
 {% block title %}Negotiation Chat | OfferEdge{% endblock %}
 {% block content %}
 <div class="max-w-3xl mx-auto mt-6">
-  <div class="bg-white rounded-2xl shadow border border-slate-100 overflow-hidden">
-    <div class="px-6 py-4 border-b flex items-center justify-between">
-      <h2 class="text-xl font-semibold text-slate-800">Negotiation Chat</h2>
+  <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow border border-slate-100 overflow-hidden">
+    <div class="px-6 py-4 border-b flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center font-semibold">
+          {{ counterparty|first|upper }}
+        </div>
+        <h2 class="text-lg md:text-xl font-semibold text-slate-800">{{ counterparty }}</h2>
+      </div>
       <a href="{% url 'finalized_deals' %}" class="text-sm text-blue-700 hover:underline">← Back to Finalized</a>
     </div>
 
     <!-- 🔄 Live Chat Messages -->
-    <div id="chat-messages" class="space-y-3 max-h-[60vh] overflow-y-auto bg-slate-50 px-4 py-4"
+    <div id="chat-messages" class="space-y-3 max-h-[60vh] overflow-y-auto bg-slate-50 px-4 py-4 no-scrollbar"
          hx-get="/negotiation/chat/messages/{{ session.id }}"
          hx-trigger="every 2s, load"
          hx-swap="innerHTML">
@@ -17,20 +22,26 @@
     </div>
 
     <!-- 💬 Composer -->
-    <form method="POST" action="/negotiation/chat/send/{{ session.id }}/" enctype="multipart/form-data" class="border-t bg-white px-4 py-3 flex items-center gap-3">
+    <form method="POST" action="/negotiation/chat/send/{{ session.id }}/" enctype="multipart/form-data" class="border-t bg-white px-3 md:px-4 py-3 flex items-center gap-2 md:gap-3">
       {% csrf_token %}
-      <input name="message" placeholder="Type your message..." class="flex-1 border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
-      <label class="text-sm text-slate-600 cursor-pointer">
-        <input type="file" name="file" class="hidden" />
-        <span class="inline-flex items-center bg-slate-200 px-3 py-2 rounded">📎 Attach</span>
-      </label>
-      <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Send</button>
+      <div class="flex-1 flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3">
+        <input name="message" placeholder="Type your message..." class="flex-1 bg-transparent py-2 focus:outline-none" />
+        <label class="text-sm text-slate-600 cursor-pointer">
+          <input type="file" name="file" class="hidden" accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/zip,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+          <span class="inline-flex items-center bg-slate-200 px-3 py-1.5 rounded" title="Attach image or file">📎</span>
+        </label>
+      </div>
+      <button class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-xl shadow hover:from-blue-700 hover:to-indigo-700 transition">Send</button>
     </form>
   </div>
 </div>
+<style>
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+</style>
 <script>
   // Auto-scroll to bottom when new messages arrive
-  document.addEventListener('htmx:afterSettle', function (evt) {
+  document.addEventListener('htmx:afterSettle', function () {
     const box = document.getElementById('chat-messages');
     if (box) { box.scrollTop = box.scrollHeight; }
   });

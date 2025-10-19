@@ -1,0 +1,20 @@
+{% extends 'base_logged_in.html' %}
+{% block title %}Report User | OfferEdge{% endblock %}
+{% block content %}
+<div class="max-w-xl mx-auto mt-10 bg-white/90 backdrop-blur-sm border border-slate-100 p-8 rounded-2xl shadow">
+  <h2 class="text-2xl font-bold mb-4 text-red-700 flex items-center gap-2">🚩 Report User</h2>
+  <p class="text-sm text-slate-700 mb-4">You are reporting <span class="font-semibold">{{ reported }}</span> for behavior in this finalized deal.</p>
+  {% if error %}
+  <div class="mb-3 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">{{ error }}</div>
+  {% endif %}
+  <form method="POST">
+    {% csrf_token %}
+    <label class="block text-sm font-semibold mb-1 text-slate-700">Reason</label>
+    <textarea name="reason" rows="5" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="Describe the issue in detail..."></textarea>
+    <div class="mt-4 flex items-center gap-3">
+      <button type="submit" class="px-5 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700">Submit Report</button>
+      <a href="{% url 'finalized_deals' %}" class="text-slate-600 hover:text-slate-800">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

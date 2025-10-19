@@ -4,62 +4,110 @@
 
 {% block content %}
 <div class="max-w-2xl mx-auto mt-10 bg-white/90 backdrop-blur-sm border border-slate-100 p-8 rounded-2xl shadow">
-  <div class="mb-2 flex justify-between">
-    <a href="{% url 'dashboard' %}" onclick="if(history.length>1){history.back();return false;}" class="text-sm text-slate-600 hover:text-slate-800">← Back</a>
-  </div>
-  <h2 class="text-3xl font-bold mb-6 text-center bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent">Post a Requirement</h2>
+  <h2 class="text-3xl font-bold text-center bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent">Post a Requirement</h2>
+  <p class="text-center text-slate-600 mt-2 mb-6">Tell us what you need — we’ll help sellers find you.</p>
 
   <!-- ✅ Add enctype for file upload -->
-  <form method="POST" enctype="multipart/form-data" class="space-y-6">
+  <form method="POST" enctype="multipart/form-data" class="space-y-6" onsubmit="this.querySelector('button[type=submit]').disabled=true; this.querySelector('button[type=submit]').classList.add('opacity-60','cursor-not-allowed');">
     {% csrf_token %}
+    <input type="hidden" name="nonce" value="{{ nonce }}" />
 
-    <!-- 📦 Requirement Fields -->
-    <div>
-      <label class="block text-sm font-semibold mb-1 text-slate-700">{{ form.title.label }}</label>
-      {{ form.title|add_class:"w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+    {% if form.non_field_errors %}
+      <div class="p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+        {{ form.non_field_errors }}
+      </div>
+    {% endif %}
+
+    <!-- 📦 Basics -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="md:col-span-2">
+        <label class="block text-sm font-semibold mb-1 text-slate-700">{{ form.title.label }}</label>
+        {{ form.title|add_class:"w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+      </div>
+      <div class="md:col-span-2">
+        <label class="block text-sm font-semibold mb-1 text-slate-700">{{ form.description.label }}</label>
+        {{ form.description|add_class:"w-full h-28 border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+      </div>
+      <div>
+        <label class="block text-sm font-semibold mb-1 text-slate-700">{{ form.quantity.label }}</label>
+        {{ form.quantity|add_class:"w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+      </div>
+      <div>
+        <label class="block text-sm font-semibold mb-1 text-slate-700">{{ form.expectedPriceRange.label }}</label>
+        {{ form.expectedPriceRange|add_class:"w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+      </div>
+      <div>
+        <label class="block text-sm font-semibold mb-2 text-slate-700">{{ form.category.label }}</label>
+        <div class="space-y-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
+          {{ form.category }}
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold mb-1 text-slate-700">{{ form.location.label }}</label>
+        {{ form.location|attrs:"class=w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500, list=kerala-locations" }}
+        <datalist id="kerala-locations">
+          <option value="Thiruvananthapuram"></option>
+          <option value="Kollam"></option>
+          <option value="Pathanamthitta"></option>
+          <option value="Alappuzha"></option>
+          <option value="Kottayam"></option>
+          <option value="Idukki"></option>
+          <option value="Ernakulam"></option>
+          <option value="Thrissur"></option>
+          <option value="Palakkad"></option>
+          <option value="Malappuram"></option>
+          <option value="Kozhikode"></option>
+          <option value="Wayanad"></option>
+          <option value="Kannur"></option>
+          <option value="Kasaragod"></option>
+          <!-- Add notable cities as suggestions too -->
+          <option value="Kochi"></option>
+          <option value="Aluva"></option>
+          <option value="Kottarakkara"></option>
+          <option value="Kayamkulam"></option>
+          <option value="Trivandrum"></option>
+          <option value="Calicut"></option>
+        </datalist>
+        <p class="text-xs text-slate-500 mt-1">Start typing and pick a Kerala location to avoid spelling mismatches.</p>
+      </div>
+      <div class="md:col-span-2">
+        <label class="block text-sm font-semibold mb-1 text-slate-700">{{ form.deadline.label }}</label>
+        {{ form.deadline|add_class:"w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+        {% if form.deadline.errors %}
+          <p class="text-xs text-red-600 mt-1">{{ form.deadline.errors|striptags }}</p>
+        {% endif %}
+      </div>
     </div>
 
-    <div>
-      <label class="block text-sm font-semibold mb-1 text-slate-700">{{ form.description.label }}</label>
-      {{ form.description|add_class:"w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
-    </div>
-
-    <div>
-      <label class="block text-sm font-semibold mb-1 text-slate-700">{{ form.quantity.label }}</label>
-      {{ form.quantity|add_class:"w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
-    </div>
-
-    <div>
-      <label class="block text-sm font-semibold mb-1 text-slate-700">{{ form.expectedPriceRange.label }}</label>
-      {{ form.expectedPriceRange|add_class:"w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
-    </div>
-
-    <div>
-      <label class="block text-sm font-semibold mb-1 text-slate-700">{{ form.deadline.label }}</label>
-      {{ form.deadline|add_class:"w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
-    </div>
-
-    <!-- 📎 File Upload -->
+    <!-- 📎 Attachment -->
     <div>
       <label class="block text-sm font-semibold mb-1 text-slate-700">{{ form.attachment.label }}</label>
       {{ form.attachment|add_class:"w-full border border-slate-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+      <p class="text-xs text-slate-500 mt-1">Optional. Upload specs or references (PDF/images).</p>
     </div>
 
     <!-- 🔄 Negotiation Preference -->
     <div>
-      <label class="block text-sm font-semibold mb-2 text-slate-700">Negotiation Preference</label>
-      <div class="space-y-2 p-3 bg-slate-50 rounded-lg border border-slate-200">{{ form.negotiation_mode }}</div>
+      <label class="block text-sm font-semibold mb-2 text-slate-700">Deal Finalisation Preference</label>
+      <div class="space-y-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
+        {{ form.negotiation_mode }}
+      </div>
     </div>
 
     <!-- 💬 Trigger Price (conditional) -->
     <div id="negotiation-trigger" class="hidden">
       <label class="block text-sm font-semibold mb-2 text-slate-700">Enable Negotiation Below Price</label>
       {{ form.negotiation_trigger_price|add_class:"w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" }}
+      <p class="text-xs text-slate-500 mt-1">Sellers offering below this price can open a negotiation chat.</p>
     </div>
 
-    <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-semibold shadow hover:from-blue-700 hover:to-indigo-700 transition">
-      Submit
-    </button>
+    <!-- Actions -->
+    <div class="flex flex-col sm:flex-row items-center gap-3 pt-2">
+      <button type="submit" class="w-full sm:w-auto px-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-semibold shadow hover:from-blue-700 hover:to-indigo-700 transition">
+        Submit
+      </button>
+      <a href="{% url 'dashboard' %}" class="text-slate-600 hover:text-slate-800">Cancel</a>
+    </div>
   </form>
 </div>
 
@@ -73,6 +121,19 @@
         triggerDiv.classList.toggle("hidden", radio.value !== "negotiation");
       });
     });
+
+    // Enforce min deadline on client
+    const deadlineInput = document.querySelector('input[name="deadline"]');
+    if (deadlineInput) {
+      const pad = (n) => String(n).padStart(2, '0');
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = pad(now.getMonth() + 1);
+      const dd = pad(now.getDate());
+      const HH = pad(now.getHours());
+      const MM = pad(now.getMinutes());
+      deadlineInput.min = `${yyyy}-${mm}-${dd}T${HH}:${MM}`;
+    }
   });
 </script>
 {% endblock %}

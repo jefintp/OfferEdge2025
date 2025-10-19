@@ -1,28 +1,82 @@
 {% extends 'base_logged_in.html' %}
 {% block title %}Explore Requirements | OfferEdge{% endblock %}
 {% block content %}
-<div class="max-w-6xl mx-auto mt-8">
-  <div class="flex items-center justify-between mb-6">
-    <div class="flex items-center gap-3">
-      <a href="{% url 'dashboard' %}" onclick="if(history.length>1){history.back();return false;}" class="inline-flex items-center text-sm text-slate-600 hover:text-slate-800">← Back</a>
-      <h2 class="text-2xl font-bold text-slate-800">Open Buyer Requirements</h2>
+<div class="max-w-7xl mx-auto mt-2">
+  <div class="flex items-center justify-between mb-0">
+    <div class="flex items-center">
+      <h2 class="text-2xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent">Explore Requirements</h2>
     </div>
   </div>
-  <div class="grid gap-6 sm:grid-cols-2">
-    {% for req in requirements %}
-      <div class="bg-white rounded-xl shadow hover:shadow-lg transition p-5 border border-slate-100">
-        <h3 class="text-lg font-semibold text-slate-900 mb-1 truncate">{{ req.title }}</h3>
-        <p class="text-sm text-slate-600 mb-3 overflow-hidden max-h-12">{{ req.description }}</p>
-        <div class="flex flex-wrap gap-2 text-xs text-slate-600 mb-4">
-          <span class="inline-flex items-center gap-1 bg-slate-100 px-2 py-1 rounded">📦 {{ req.quantity }}</span>
-          <span class="inline-flex items-center gap-1 bg-slate-100 px-2 py-1 rounded">💰 {{ req.expectedPriceRange }}</span>
-          <span class="inline-flex items-center gap-1 bg-slate-100 px-2 py-1 rounded">⏰ {{ req.deadline }}</span>
+
+  <!-- Filters -->
+  <form id="filter-form" method="get" class="mb-6"
+        hx-get="{% url 'explore_quotes' %}"
+        hx-trigger="change, keyup delay:300ms"
+        hx-target="#explore-results"
+        hx-push-url="true">
+    <div class="relative rounded-2xl p-[1px] bg-gradient-to-r from-blue-500 to-indigo-600 mb-2 w-full">
+      <div class="rounded-2xl bg-white/90 backdrop-blur-sm p-4">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end w-full">
+          <div class="md:col-span-4 w-full">
+            <span class="block text-sm font-medium text-slate-700 mb-1">Type</span>
+            <div class="flex items-center gap-2 flex-wrap">
+              <label class="inline-flex items-center gap-2 text-sm px-3 py-1.5 rounded-full border border-slate-300 bg-white cursor-pointer">
+                <input class="accent-indigo-600" type="radio" name="category" value="service" {% if filter_category == 'service' %}checked{% endif %}>
+                Service
+              </label>
+              <label class="inline-flex items-center gap-2 text-sm px-3 py-1.5 rounded-full border border-slate-300 bg-white cursor-pointer">
+                <input class="accent-indigo-600" type="radio" name="category" value="product" {% if filter_category == 'product' %}checked{% endif %}>
+                Product
+              </label>
+              <label class="inline-flex items-center gap-2 text-sm px-3 py-1.5 rounded-full border border-slate-300 bg-white cursor-pointer">
+                <input class="accent-indigo-600" type="radio" name="category" value="" {% if not filter_category %}checked{% endif %}>
+                All
+              </label>
+            </div>
+          </div>
+          <div class="md:col-span-4 w-full">
+            <label class="block text-sm font-medium text-slate-700">Search title</label>
+            <input type="search" name="q" value="{{ filter_q }}"
+                   class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                   placeholder="Search by requirement title">
+          </div>
+          <div class="md:col-span-3 w-full">
+            <label class="block text-sm font-medium text-slate-700">Location</label>
+            <input type="text" name="location" value="{{ filter_location }}" list="kerala-locations"
+                   class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Start typing...">
+            <datalist id="kerala-locations">
+              <option value="Thiruvananthapuram"></option>
+              <option value="Kollam"></option>
+              <option value="Pathanamthitta"></option>
+              <option value="Alappuzha"></option>
+              <option value="Kottayam"></option>
+              <option value="Idukki"></option>
+              <option value="Ernakulam"></option>
+              <option value="Thrissur"></option>
+              <option value="Palakkad"></option>
+              <option value="Malappuram"></option>
+              <option value="Kozhikode"></option>
+              <option value="Wayanad"></option>
+              <option value="Kannur"></option>
+              <option value="Kasaragod"></option>
+              <option value="Kochi"></option>
+              <option value="Aluva"></option>
+              <option value="Kottarakkara"></option>
+              <option value="Kayamkulam"></option>
+              <option value="Trivandrum"></option>
+              <option value="Calicut"></option>
+            </datalist>
+          </div>
+          <div class="md:col-span-1 w-full flex md:justify-end">
+            <a href="{% url 'explore_quotes' %}" class="w-full md:w-auto text-center px-4 py-2 rounded-lg bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 border border-slate-200 hover:from-slate-200 hover:to-slate-300">Reset</a>
+          </div>
         </div>
-        <a href="{% url 'place_quote' req.id %}" class="inline-flex items-center bg-emerald-600 text-white px-3 py-2 rounded-md text-sm hover:bg-emerald-700">Place a Quote</a>
       </div>
-    {% empty %}
-      <div class="col-span-2 text-center text-slate-500 py-12">No open requirements found.</div>
-    {% endfor %}
+    </div>
+  </form>
+
+  <div id="explore-results">
+    {% include 'quotes/partials/explore_list.html' %}
   </div>
 </div>
 {% endblock %}

@@ -7,6 +7,8 @@ from .views import (
     finalize_quote_view as mod_finalize_quote_view,
     delete_quote_view as mod_delete_quote_view,
     delete_requirement_mod_view,
+    create_report_view,
+    report_detail_view,
 )
 
 urlpatterns = [
@@ -17,4 +19,7 @@ urlpatterns = [
     path('finalize_quote/<str:quote_id>/', mod_finalize_quote_view, name='mod_finalize_quote'),
     path('delete_quote/<str:quote_id>/', mod_delete_quote_view, name='mod_delete_quote'),
     path('delete_requirement/<str:req_id>/', delete_requirement_mod_view, name='mod_delete_requirement'),
+    # Reports
+    path('report/<str:deal_id>/', create_report_view, name='create_report'),
+    path('reports/<str:report_id>/', report_detail_view, name='report_detail'),
 ]

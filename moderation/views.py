@@ -5,8 +5,11 @@ from quotes.models import Quote
 from users.decorators import admin_required
 from django.views.decorators.http import require_POST
 from deals.models import Deal
+from moderation.models import Report
 from datetime import datetime
 from requirements.utils import delete_requirement_and_related
+from django.shortcuts import render, redirect
+from django.http import HttpResponseForbidden
 
 @admin_required
 def moderation_dashboard(request):
@@ -34,6 +37,24 @@ def moderation_dashboard(request):
     # Quotes
     quote_qs = Quote.objects().only('req_id', 'seller_id', 'price', 'finalized', 'createdon')
     quotes = quote_qs.order_by('-createdon')[0: page_size]
+
+    # Reports (recent)
+    reports = Report.objects().order_by('-created_at')[0:50]
+    # Enrich reports with deal/requirement info
+    report_rows = []
+    for r in reports:
+        deal = Deal.objects(id=r.deal_id).first()
+        req = Requirement.objects(id=getattr(deal, 'requirement_id', None)).first() if deal else None
+        report_rows.append({
+            'id': str(r.id),
+            'deal_id': r.deal_id,
+            'reporter_id': r.reporter_id,
+            'reported_id': r.reported_id,
+            'created_at': r.created_at,
+            'status': getattr(r, 'status', 'open'),
+            'reason': getattr(r, 'reason', '')[:120],
+            'requirement_title': getattr(req, 'title', '(unknown)'),
+        })
 
     # Buyer/Seller flags
     buyer_ids = set(req.buyerid for req in requirements)
@@ -66,6 +87,7 @@ def moderation_dashboard(request):
         'users': moderated_users,
         'requirements': requirements,
         'quote_rows': quote_rows,
+        'report_rows': report_rows,
         'q': q,
         'page': page,
     })
@@ -145,3 +167,56 @@ def delete_requirement_mod_view(request, req_id):
     # Admin-triggered cascade delete (requirement + related quotes + deals)
     ok, msg = delete_requirement_and_related(req_id=req_id, user_id=request.session.get('userid'), is_admin=True)
     return redirect('moderation_dashboard')
+
+# User report creation (participants only)
+
+def create_report_view(request, deal_id):
+    if 'userid' not in request.session:
+        return redirect('/users/login')
+    user = request.session['userid']
+    deal = Deal.objects(id=deal_id).first()
+    if not deal:
+        return redirect('finalized_deals')
+    if user not in [deal.buyer_id, deal.seller_id]:
+        return HttpResponseForbidden()
+
+    # Determine reported user
+    reported = deal.seller_id if user == deal.buyer_id else deal.buyer_id
+
+    if request.method == 'POST':
+        reason = (request.POST.get('reason') or '').strip()
+        if not reason:
+            return render(request, 'moderation/report_form.html', {
+                'deal': deal, 'reported': reported, 'error': 'Please provide a reason.'
+            })
+        # Avoid duplicate identical open report by same reporter on same deal
+        if Report.objects(deal_id=str(deal.id), reporter_id=user, status='open').first():
+            return redirect('finalized_deals')
+        Report(
+            deal_id=str(deal.id),
+            reporter_id=user,
+            reported_id=reported,
+            requirement_id=getattr(deal, 'requirement_id', None),
+            quote_id=getattr(deal, 'quote_id', None),
+            reason=reason,
+            status='open'
+        ).save()
+        return redirect('finalized_deals')
+
+    return render(request, 'moderation/report_form.html', {'deal': deal, 'reported': reported})
+
+# Admin: report detail view
+@admin_required
+def report_detail_view(request, report_id):
+    r = Report.objects(id=report_id).first()
+    if not r:
+        return redirect('moderation_dashboard')
+    deal = Deal.objects(id=r.deal_id).first()
+    req = Requirement.objects(id=getattr(deal, 'requirement_id', None)).first() if deal else None
+    quote = Quote.objects(id=getattr(deal, 'quote_id', None)).first() if deal else None
+    return render(request, 'moderation/report_detail.html', {
+        'report': r,
+        'deal': deal,
+        'requirement': req,
+        'quote': quote,
+    })

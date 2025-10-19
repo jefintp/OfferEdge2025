@@ -33,7 +33,24 @@
   <!-- 💰 Quote Details -->
   <p class="text-sm text-gray-600 mb-1">💰 Price: ₹{{ quote.price }}</p>
   <p class="text-sm text-gray-600 mb-1">🚚 Delivery: {{ quote.deliveryTimeline }}</p>
-  <p class="text-xs text-gray-500 mb-3">📝 Notes: {{ quote.notes|default:"—"|truncatechars:50 }}</p>
+  <p class="text-sm text-gray-600 mb-1">👤 Seller: <span class="font-medium">{{ quote.seller_id }}</span></p>
+  <p class="text-xs text-gray-500 mb-3">📝 Notes: {{ quote.notes|default:"—"|truncatechars:120 }}</p>
+  <p class="text-xs text-gray-400 mb-3">📅 Placed: {{ quote.createdon|date:"M d, Y H:i" }}</p>
+
+  {% if quote.attachment_url %}
+    <div class="mb-3">
+      <div class="text-xs text-gray-500 mb-1">Seller attachment:</div>
+      {% if quote.attachment_type and quote.attachment_type|slice:":6" == "image/" %}
+        <a href="{{ quote.attachment_url }}" target="_blank" class="block">
+          <img src="{{ quote.attachment_url }}" alt="Attachment" class="max-h-40 rounded border border-slate-200">
+        </a>
+      {% else %}
+        <a href="{{ quote.attachment_url }}" download class="inline-flex items-center text-blue-600 hover:underline">
+          ⬇️ {{ quote.attachment_name|default:"Download attachment" }}
+        </a>
+      {% endif %}
+    </div>
+  {% endif %}
 
   <!-- 💬 Start Negotiation -->
   {% if chat_flags|get_item:quote_id_str %}

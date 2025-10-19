@@ -4,44 +4,67 @@
 {% block content %}
 <main class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 py-12 px-4 sm:px-6 lg:px-8">
   <div class="max-w-4xl mx-auto">
-    <div class="bg-white shadow-xl rounded-2xl p-8">
+    <div class="bg-white/90 backdrop-blur-sm border border-slate-100 shadow-2xl rounded-2xl p-8">
       <div class="flex items-center justify-between mb-6 border-b pb-3">
-        <h2 class="text-3xl font-bold text-gray-800 flex items-center gap-2">💼 Finalized Deals</h2>
+        <h2 class="text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent flex items-center gap-2">💼 Finalized Deals</h2>
         <a href="/dashboard/" class="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 transition">← Back to Dashboard</a>
       </div>
 
       {% if deals %}
-        <ul class="divide-y divide-gray-200">
-          {% for d in deals %}
-          <li class="py-5 flex items-center justify-between hover:bg-gray-50 px-2 rounded-lg transition">
-            <div>
-              <div class="font-semibold text-gray-900 text-lg">{{ d.requirement_title }}</div>
-              <div class="text-sm text-gray-600 mt-1">
-                Role: <span class="font-medium">{{ d.role|capfirst }}</span> • With <span class="font-medium text-gray-800">{{ d.counterparty }}</span> •
-                <span class="text-gray-500">{{ d.finalized_at|date:"M d, Y H:i" }}</span> •
-                💰 {{ d.amount|default:"—" }}
-              </div>
-              {% if d.last_message %}
-              <div class="text-xs text-gray-500 mt-1 truncate">Last message: {{ d.last_message }}</div>
-              {% endif %}
-              <div class="mt-2">
-                <a href="{% url 'quotes_for_requirement' d.requirement_id %}" class="text-xs text-indigo-700 hover:underline">View requirement</a>
-              </div>
-            </div>
-            <a href="{% url 'start_chat' d.quote_id %}"
-               class="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-800 transition">
-              💬 Open Chat
-            </a>
-          </li>
-          {% endfor %}
-        </ul>
+        <div class="space-y-8">
+          <section>
+            <h3 class="text-xl font-semibold text-slate-800 mb-3">Buy</h3>
+            <ul class="space-y-4">
+              {% for d in deals %}
+                {% if d.role == 'buyer' %}
+                <li class="p-5 rounded-xl bg-gradient-to-br from-white to-blue-50 border border-blue-100 shadow hover:shadow-lg transition flex items-center justify-between">
+                  <div>
+                    <div class="font-semibold text-slate-900 text-lg">{{ d.requirement_title }}</div>
+                    <div class="text-sm text-slate-700 mt-1">With <span class="font-medium text-slate-900">{{ d.counterparty }}</span></div>
+                    <div class="text-xs text-slate-500 mt-1">{{ d.finalized_at|date:"M d, Y H:i" }} • 💰 {{ d.amount|default:"—" }}</div>
+                    {% if d.last_message %}
+                    <div class="text-xs text-slate-500 mt-1 truncate">Last message: {{ d.last_message }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <a href="{% url 'start_chat' d.quote_id %}" class="inline-flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full bg-blue-600 text-white hover:bg-blue-700 shadow">💬 Open Chat</a>
+                    <a href="{% url 'create_report' d.id %}" class="inline-flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 shadow">🚩 Report</a>
+                  </div>
+                </li>
+                {% endif %}
+              {% endfor %}
+            </ul>
+          </section>
+          <section>
+            <h3 class="text-xl font-semibold text-slate-800 mb-3">Sell</h3>
+            <ul class="space-y-4">
+              {% for d in deals %}
+                {% if d.role == 'seller' %}
+                <li class="p-5 rounded-xl bg-gradient-to-br from-white to-emerald-50 border border-emerald-100 shadow hover:shadow-lg transition flex items-center justify-between">
+                  <div>
+                    <div class="font-semibold text-slate-900 text-lg">{{ d.requirement_title }}</div>
+                    <div class="text-sm text-slate-700 mt-1">With <span class="font-medium text-slate-900">{{ d.counterparty }}</span></div>
+                    <div class="text-xs text-slate-500 mt-1">{{ d.finalized_at|date:"M d, Y H:i" }} • 💰 {{ d.amount|default:"—" }}</div>
+                    {% if d.last_message %}
+                    <div class="text-xs text-slate-500 mt-1 truncate">Last message: {{ d.last_message }}</div>
+                    {% endif %}
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <a href="{% url 'start_chat' d.quote_id %}" class="inline-flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full bg-emerald-600 text-white hover:bg-emerald-700 shadow">💬 Open Chat</a>
+                    <a href="{% url 'create_report' d.id %}" class="inline-flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-full bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 shadow">🚩 Report</a>
+                  </div>
+                </li>
+                {% endif %}
+              {% endfor %}
+            </ul>
+          </section>
+        </div>
       {% else %}
-        <div class="py-16 text-center">
-          <div class="text-gray-500 text-lg">No finalized deals yet.</div>
-          <div class="mt-2 text-sm text-gray-400">Your successful deals will appear here once completed.</div>
+        <div class="py-16 text-center bg-white/70 border border-slate-100 rounded-xl">
+          <div class="text-slate-600 text-lg">No finalized deals yet.</div>
+          <div class="mt-2 text-sm text-slate-400">Your successful deals will appear here once completed.</div>
         </div>
       {% endif %}
-    </div>
   </div>
 </main>
 {% endblock %}

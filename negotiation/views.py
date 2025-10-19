@@ -5,6 +5,7 @@ from django.conf import settings
 from negotiation.models import ChatSession, ChatMessage
 from quotes.models import Quote
 from requirements.models import Requirement
+from deals.models import Deal
 from datetime import datetime
 from bson import ObjectId
 import os
@@ -20,20 +21,45 @@ def start_chat_view(request, quote_id):
     if not req:
         return redirect("/users/dashboard")
 
-    # Permission: only buyer or finalized seller may start
-    if userid not in [req.buyerid, quote.seller_id]:
+    session = ChatSession.objects(quote_id=str(quote.id)).first()
+
+    # If a deal is finalized for this requirement, only allow the finalized quote's participants
+    deal = Deal.objects(requirement_id=str(req.id)).first()
+    if deal and str(deal.quote_id) != str(quote.id):
         return redirect("/users/dashboard")
 
-    session = ChatSession.objects(quote_id=str(quote.id)).first()
-    if not session:
-        session = ChatSession(
-            quote_id=str(quote.id),
-            buyer_id=req.buyerid,
-            seller_id=quote.seller_id
-        )
-        session.save()
+    # Buyer may always start or open
+    if userid == req.buyerid:
+        if not session:
+            session = ChatSession(
+                quote_id=str(quote.id),
+                buyer_id=req.buyerid,
+                seller_id=quote.seller_id
+            )
+            session.save()
+        return redirect(f"/negotiation/chat/{session.id}/")
 
-    return redirect(f"/negotiation/chat/{session.id}/")
+    # Seller path: only allowed if buyer already started (session exists)
+    # OR negotiation mode with price below trigger
+    if userid == quote.seller_id:
+        if session:
+            return redirect(f"/negotiation/chat/{session.id}/")
+        try:
+            if getattr(req, 'negotiation_mode', None) == "negotiation" and getattr(req, 'negotiation_trigger_price', None) is not None:
+                if float(quote.price) < float(req.negotiation_trigger_price):
+                    session = ChatSession(
+                        quote_id=str(quote.id),
+                        buyer_id=req.buyerid,
+                        seller_id=quote.seller_id
+                    )
+                    session.save()
+                    return redirect(f"/negotiation/chat/{session.id}/")
+        except Exception:
+            pass
+        return redirect("/users/dashboard")
+
+    # Others: not allowed
+    return redirect("/users/dashboard")
 
 
 def chat_room_view(request, session_id):
@@ -50,10 +76,15 @@ def chat_room_view(request, session_id):
         return redirect("/users/dashboard")
 
     messages = ChatMessage.objects(session_id=session).order_by('timestamp')
+
+    # Determine counterparty to display in header
+    counterparty = session.seller_id if userid == session.buyer_id else session.buyer_id
+
     return render(request, "negotiation/chat_room.html", {
         "session": session,
         "messages": messages,
-        "userid": userid
+        "userid": userid,
+        "counterparty": counterparty,
     })
 
 
@@ -152,10 +183,29 @@ def chat_dashboard_view(request):
             quote = None
             requirement = None
 
+        # If a deal exists for this requirement, only keep the session whose quote matches the deal
+        try:
+            if requirement:
+                deal = Deal.objects(requirement_id=str(requirement.id)).first()
+                if deal and str(deal.quote_id) != (str(quote.id) if quote else ""):
+                    continue
+        except Exception:
+            pass
+
+        # Determine role for grouping in template
+        role = None
+        if s.buyer_id == userid:
+            role = "buyer"
+        elif s.seller_id == userid:
+            role = "seller"
+        else:
+            continue
+
         session_data.append({
             "session": s,
             "quote": quote,
             "requirement": requirement,
+            "role": role,
         })
 
     return render(request, "negotiation/chat_dashboard.html", {

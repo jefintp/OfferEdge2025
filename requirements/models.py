@@ -12,9 +12,18 @@ class Requirement(Document):
     expectedPriceRange = StringField(required=True)
     deadline = DateTimeField(required=True)
     createdAt = DateTimeField(default=datetime.utcnow)
+
+    # New fields
+    category = StringField(choices=["service", "product"])  # "service" or "product"
+    location = StringField()  # free-text location/city/area
+
     negotiation_mode = StringField(choices=["lowest_bid", "negotiation"], required=True)
     negotiation_trigger_price = FloatField()  # Only used if negotiation is enabled
-    # attachment = models.FileField(upload_to='uploads/', blank=True, null=True)
+
+    # Attachment metadata (saved under MEDIA_ROOT/requirement_uploads)
+    attachment_url = StringField()       # e.g. "/media/requirement_uploads/uuid_filename.pdf"
+    attachment_type = StringField()      # e.g. "image/png", "application/pdf"
+    attachment_name = StringField()      # original filename
 
     # Moderation flags
     flagged = BooleanField(default=False)
@@ -25,5 +34,7 @@ class Requirement(Document):
             'buyerid',
             '-createdAt',
             'flagged',
+            'category',
+            'location',
         ]
     }

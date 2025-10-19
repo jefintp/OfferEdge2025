@@ -1,27 +1,48 @@
 {% extends 'base_logged_in.html' %}
 {% block title %}Requirement Details | OfferEdge{% endblock %}
 {% block content %}
-<div class="max-w-3xl mx-auto mt-8 bg-white rounded-2xl shadow border border-slate-100 p-6">
+<div class="max-w-3xl mx-auto mt-8 bg-white/90 backdrop-blur-sm rounded-2xl shadow border border-slate-100 p-6">
   <div class="flex items-center justify-between mb-4">
     <a href="{% url 'dashboard' %}" onclick="if(history.length>1){history.back();return false;}" class="text-sm text-slate-600 hover:text-slate-800">← Back</a>
     <div class="text-sm text-slate-500">Quotes received: <span class="font-semibold">{{ quotes_count }}</span></div>
   </div>
 
-  <h2 class="text-2xl font-bold text-slate-900 mb-2">{{ requirement.title }}</h2>
+  <h2 class="text-2xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent mb-1">{{ requirement.title }}</h2>
   <p class="text-slate-700 mb-4">{{ requirement.description }}</p>
-  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-slate-700 mb-6">
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-slate-700 mb-6 bg-slate-50 rounded-lg p-4 border border-slate-200">
     <div>📦 Quantity: <span class="font-semibold">{{ requirement.quantity }}</span></div>
     <div>💰 Price Range: <span class="font-semibold">{{ requirement.expectedPriceRange }}</span></div>
     <div>⏰ Deadline: <span class="font-semibold">{{ requirement.deadline }}</span></div>
     <div>📅 Posted: <span class="font-semibold">{{ requirement.createdAt|date:"M d, Y" }}</span></div>
+    {% if requirement.category %}
+    <div>🏷️ Category: <span class="font-semibold">{{ requirement.category|capfirst }}</span></div>
+    {% endif %}
+    {% if requirement.location %}
+    <div>📍 Location: <span class="font-semibold">{{ requirement.location|title }}</span></div>
+    {% endif %}
   </div>
 
-  <div class="flex flex-wrap items-center gap-3 mb-4">
-    <a href="{% url 'quotes_for_requirement' requirement.id %}" class="inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">View Quotes</a>
+  {% if requirement.attachment_url %}
+  <div class="mb-4">
+    <div class="text-sm text-slate-600 mb-1">Attachment:</div>
+    {% if requirement.attachment_type and requirement.attachment_type|slice:":6" == "image/" %}
+      <a href="{{ requirement.attachment_url }}" target="_blank" class="block">
+        <img src="{{ requirement.attachment_url }}" alt="Attachment" class="max-h-56 rounded border border-slate-200">
+      </a>
+    {% else %}
+      <a href="{{ requirement.attachment_url }}" download class="inline-flex items-center text-blue-600 hover:underline">
+        ⬇️ {{ requirement.attachment_name|default:"Download attachment" }}
+      </a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="flex flex-wrap items-center gap-3 mb-2">
+    <a href="{% url 'quotes_for_requirement' requirement.id %}" class="inline-flex items-center bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-4 py-2 rounded-lg shadow hover:from-blue-700 hover:to-indigo-800">View Quotes</a>
     {% if can_delete %}
     <form method="POST" action="{% url 'delete_requirement' requirement.id %}" onsubmit="return confirm('Delete this requirement and its quotes?');">
       {% csrf_token %}
-      <button type="submit" class="inline-flex items-center bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Delete</button>
+      <button type="submit" class="inline-flex items-center bg-red-600 text-white px-4 py-2 rounded-lg shadow hover:bg-red-700">Delete</button>
     </form>
     {% endif %}
   </div>

@@ -7,6 +7,7 @@ from quotes.models import Quote
 from deals.models import Deal  # ✅ Fix: import Deal model
 from bson import ObjectId
 from datetime import datetime
+from django.utils import timezone
 
 # ✅ Registration
 def signup_view(request):
@@ -166,6 +167,7 @@ from deals.models import Deal
 from quotes.models import Quote
 from requirements.models import Requirement
 from users.models import User
+from negotiation.models import ChatSession
 
 
 def dashboard_view(request):
@@ -190,26 +192,34 @@ def dashboard_view(request):
         if deal:
             finalized_quote_id = str(deal.quote_id)
 
-        # ✅ Auto-finalize if deadline passed and negotiation is disabled
-        if not finalized_quote_id and req.deadline < datetime.now() and getattr(req, 'negotiation_mode', None) != "negotiation":
-            sorted_quotes = sorted(quotes, key=lambda q: float(q.price))
-            if sorted_quotes:
-                best_quote = sorted_quotes[0]
-                best_quote.finalized = True
-                best_quote.save()
+        # ✅ Auto-finalize for lowest-bid mode after deadline (timezone-safe)
+        deadline = getattr(req, 'deadline', None)
+        mode = getattr(req, 'negotiation_mode', None)
+        if not finalized_quote_id and deadline and mode == "lowest_bid":
+            # Normalize deadline to aware
+            if timezone.is_naive(deadline):
+                deadline_aware = timezone.make_aware(deadline, timezone.get_current_timezone())
+            else:
+                deadline_aware = deadline
+            if deadline_aware <= timezone.now():
+                sorted_quotes = sorted(quotes, key=lambda q: float(q.price))
+                if sorted_quotes:
+                    best_quote = sorted_quotes[0]
+                    best_quote.finalized = True
+                    best_quote.save()
 
-                Deal(
-                    quote_id=str(best_quote.id),
-                    requirement_id=req_id_str,
-                    buyer_id=req.buyerid,
-                    seller_id=best_quote.seller_id,
-                    finalized_by="system",
-                    method="auto",
-                    finalized_on=datetime.now()
-                ).save()
+                    Deal(
+                        quote_id=str(best_quote.id),
+                        requirement_id=req_id_str,
+                        buyer_id=req.buyerid,
+                        seller_id=best_quote.seller_id,
+                        finalized_by="system",
+                        method="auto",
+                        finalized_on=timezone.now()
+                    ).save()
 
-                finalized_quote_id = str(best_quote.id)
-                request.session['finalized_success'] = True
+                    finalized_quote_id = str(best_quote.id)
+                    request.session['finalized_success'] = True
 
         # ✅ Annotate quotes and select one for display
         selected_quote = None
@@ -250,12 +260,32 @@ def dashboard_view(request):
 
     # 🔹 Seller-side: placed quotes
     my_quotes = Quote.objects(seller_id=userid).order_by('-createdon')
-    req_map = {str(req.id): req.title for req in Requirement.objects()}
+    # Build requirement maps for quotes
+    req_ids_for_quotes = list({q.req_id for q in my_quotes})
+    req_docs = {}
+    if req_ids_for_quotes:
+        try:
+            req_docs = {str(r.id): r for r in Requirement.objects(id__in=req_ids_for_quotes)}
+        except Exception:
+            req_docs = {}
+    req_map = {rid: getattr(doc, 'title', 'Untitled Requirement') for rid, doc in req_docs.items()}
 
     # 💬 Chat eligibility for placed quotes
     chat_enabled_map = {}
     for quote in my_quotes:
         try:
+            # If a deal is finalized for this requirement, only the finalized quote may chat
+            deal = Deal.objects(requirement_id=quote.req_id).first()
+            if deal and str(deal.quote_id) != str(quote.id):
+                # Disable chat for non-finalized quotes
+                continue
+
+            # Enable if buyer started chat (session exists)
+            if ChatSession.objects(quote_id=str(quote.id)).first():
+                chat_enabled_map[str(quote.id)] = True
+                continue
+
+            # Or if requirement has negotiation trigger and price is below
             req = Requirement.objects.get(id=quote.req_id)
             if getattr(req, 'negotiation_mode', None) == "negotiation" and getattr(req, 'negotiation_trigger_price', None) is not None:
                 trigger_price = float(req.negotiation_trigger_price)
@@ -274,6 +304,7 @@ def dashboard_view(request):
     for quote in my_quotes:
         quote_id_str = str(quote.id)
         req_id_str = quote.req_id
+        req_doc = req_docs.get(req_id_str)
         req_title = req_map.get(req_id_str, "Untitled Requirement")
         status = "in_progress"
 
@@ -288,9 +319,15 @@ def dashboard_view(request):
         else:
             status = "in_progress"
 
+        requirement_buyerid = getattr(req_doc, 'buyerid', None) if req_doc else None
+        requirement_expected = getattr(req_doc, 'expectedPriceRange', None) if req_doc else None
+
         quote_data.append({
             "quote": quote,
+            "requirement_id": req_id_str,
             "requirement_title": req_title,
+            "requirement_buyerid": requirement_buyerid,
+            "requirement_expected_price": requirement_expected,
             "status": status
         })
 

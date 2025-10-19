@@ -3,7 +3,11 @@ from .forms import QuoteForm
 from quotes.models import Quote
 from requirements.models import Requirement
 from deals.models import Deal
+from negotiation.models import ChatSession
 from django.views.decorators.http import require_POST
+from django.conf import settings
+import os
+import uuid
 
 # 🔍 Explore all posted requirements
 def explore_requirements_view(request):
@@ -11,11 +15,41 @@ def explore_requirements_view(request):
         return redirect('/users/login')
 
     user_id = request.session['userid']
-    requirements = Requirement.objects(buyerid__ne=user_id)  # ✅ Exclude own requirements
 
-    return render(request, 'quotes/explore_quotes.html', {
-        'requirements': requirements
-    })
+    # Filters
+    category = (request.GET.get('category') or '').strip().lower()
+    location = (request.GET.get('location') or '').strip()
+    q = (request.GET.get('q') or '').strip()
+
+    qs = Requirement.objects(buyerid__ne=user_id)
+
+    # Exclude requirements already quoted by this seller; show them again only if the quote is deleted
+    quoted_req_ids = list({qobj.req_id for qobj in Quote.objects(seller_id=user_id).only('req_id')})
+    if quoted_req_ids:
+        qs = qs(id__nin=quoted_req_ids)
+
+    if category in ('service', 'product'):
+        qs = qs(category=category)
+    if location:
+        # stored normalized to lowercase; compare case-insensitively
+        qs = qs(location=location.casefold())
+    if q:
+        qs = qs(title__icontains=q)
+
+    requirements = qs.order_by('-createdAt')
+
+    context = {
+        'requirements': requirements,
+        'filter_category': category,
+        'filter_location': location,
+        'filter_q': q,
+    }
+
+    # If HTMX request, return only the list partial
+    if request.headers.get('HX-Request') == 'true':
+        return render(request, 'quotes/partials/explore_list.html', context)
+
+    return render(request, 'quotes/explore_quotes.html', context)
 
 # 📥 Place a quote on a specific requirement
 def place_quote_view(request, reqid):
@@ -50,11 +84,22 @@ def place_quote_view(request, reqid):
                 deliveryTimeline=form.cleaned_data['deliveryTimeline'],
                 notes=form.cleaned_data['notes']
             )
-            if request.FILES.get('attachments'):
-                quote.attachments.put(
-                    request.FILES['attachments'],
-                    content_type=request.FILES['attachments'].content_type
-                )
+            # Save uploaded file if present
+            uploaded = request.FILES.get('attachments')
+            if uploaded:
+                try:
+                    folder = os.path.join(settings.MEDIA_ROOT, 'quote_uploads')
+                    os.makedirs(folder, exist_ok=True)
+                    safe_name = f"{uuid.uuid4()}_{uploaded.name}"
+                    path = os.path.join(folder, safe_name)
+                    with open(path, 'wb+') as dest:
+                        for chunk in uploaded.chunks():
+                            dest.write(chunk)
+                    quote.attachment_url = f"/media/quote_uploads/{safe_name}"
+                    quote.attachment_type = getattr(uploaded, 'content_type', None)
+                    quote.attachment_name = uploaded.name
+                except Exception:
+                    pass
             quote.save()
             return redirect('/quotes/explore')
     else:
@@ -122,14 +167,39 @@ def quotes_for_requirement_view(request, reqid):
 
     # ✅ Build chat eligibility map
     chat_flags = {}
-    try:
-        if req.negotiation_mode == "negotiation" and req.negotiation_trigger_price is not None:
-            trigger_price = float(req.negotiation_trigger_price)
+    userid = request.session.get("userid")
+
+    # If a finalized quote exists, restrict chat to the finalized quote only
+    if finalized_quote_id:
+        for quote in quotes:
+            qid = str(quote.id)
+            if qid == finalized_quote_id:
+                chat_flags[qid] = True  # buyer and the finalized seller will be allowed by start_chat_view
+            else:
+                chat_flags[qid] = False
+    else:
+        # Buyer can start negotiation on any quote (when not finalized)
+        if userid and req and userid == req.buyerid:
             for quote in quotes:
-                if float(quote.price) < trigger_price:
+                chat_flags[str(quote.id)] = True
+
+        # Sellers under trigger price remain eligible
+        try:
+            if req.negotiation_mode == "negotiation" and req.negotiation_trigger_price is not None:
+                trigger_price = float(req.negotiation_trigger_price)
+                for quote in quotes:
+                    if float(quote.price) < trigger_price:
+                        chat_flags[str(quote.id)] = True
+        except Exception as e:
+            print(f"⚠️ Error checking chat eligibility for quotes in requirement {reqid}: {e}")
+
+        # If a chat session already exists for a quote, allow access regardless
+        try:
+            for quote in quotes:
+                if ChatSession.objects(quote_id=str(quote.id)).first():
                     chat_flags[str(quote.id)] = True
-    except Exception as e:
-        print(f"⚠️ Error checking chat eligibility for quotes in requirement {reqid}: {e}")
+        except Exception:
+            pass
 
     # ✅ Build quote status map
     quote_status_map = {}
@@ -170,7 +240,11 @@ def delete_quote_view(request, quote_id):
     if not is_admin and quote.seller_id != user:
         return redirect('/users/dashboard')
 
-    # Optional: block deletion if finalized/deal exists
+    # Block deletion if this quote is accepted/finalized
+    if getattr(quote, 'finalized', False):
+        return redirect('/users/dashboard')
+
+    # Block deletion if a deal exists for this quote
     deal = Deal.objects(quote_id=str(quote.id)).first()
     if deal:
         return redirect('/users/dashboard')
