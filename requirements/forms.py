@@ -1,5 +1,5 @@
 from django import forms
-from django.utils import timezone
+from datetime import datetime
 
 NEGOTIATION_CHOICES = [
     ("lowest_bid", "Go with Lowest Bid"),
@@ -35,12 +35,15 @@ class RequirementForm(forms.Form):
         deadline = self.cleaned_data.get("deadline")
         if not deadline:
             return deadline
-        # Normalize to aware datetime in current timezone
-        if timezone.is_naive(deadline):
-            deadline = timezone.make_aware(deadline, timezone.get_current_timezone())
-        now = timezone.now()
-        if deadline <= now:
+        # Compare using local naive time (IST per settings)
+        if deadline <= datetime.now():
             raise forms.ValidationError("Deadline must be in the future.")
+        # Ensure stored value is naive (strip tz if present)
+        try:
+            if getattr(deadline, 'tzinfo', None) is not None:
+                deadline = deadline.replace(tzinfo=None)
+        except Exception:
+            pass
         return deadline
 
     def clean_location(self):

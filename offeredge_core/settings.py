@@ -115,11 +115,13 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+# Use Indian Standard Time across the app
+TIME_ZONE = 'Asia/Kolkata'
 
 USE_I18N = True
 
-USE_TZ = True
+# Operate in local (IST) naive datetimes to avoid tz confusion in MongoEngine
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)
@@ -141,3 +143,9 @@ connect(
 )
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Celery (broker defaults to local Redis unless overridden via env)
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', CELERY_BROKER_URL)
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_ENABLE_UTC = False

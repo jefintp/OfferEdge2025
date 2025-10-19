@@ -7,7 +7,6 @@ from quotes.models import Quote
 from deals.models import Deal  # ✅ Fix: import Deal model
 from bson import ObjectId
 from datetime import datetime
-from django.utils import timezone
 
 # ✅ Registration
 def signup_view(request):
@@ -192,16 +191,11 @@ def dashboard_view(request):
         if deal:
             finalized_quote_id = str(deal.quote_id)
 
-        # ✅ Auto-finalize for lowest-bid mode after deadline (timezone-safe)
+        # ✅ Auto-finalize for lowest-bid mode after deadline (local IST naive)
         deadline = getattr(req, 'deadline', None)
         mode = getattr(req, 'negotiation_mode', None)
         if not finalized_quote_id and deadline and mode == "lowest_bid":
-            # Normalize deadline to aware
-            if timezone.is_naive(deadline):
-                deadline_aware = timezone.make_aware(deadline, timezone.get_current_timezone())
-            else:
-                deadline_aware = deadline
-            if deadline_aware <= timezone.now():
+            if deadline <= datetime.now():
                 sorted_quotes = sorted(quotes, key=lambda q: float(q.price))
                 if sorted_quotes:
                     best_quote = sorted_quotes[0]
@@ -215,7 +209,7 @@ def dashboard_view(request):
                         seller_id=best_quote.seller_id,
                         finalized_by="system",
                         method="auto",
-                        finalized_on=timezone.now()
+                        finalized_on=datetime.now()
                     ).save()
 
                     finalized_quote_id = str(best_quote.id)

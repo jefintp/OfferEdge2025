@@ -29,6 +29,9 @@ Common commands
     - python manage.py test
   - Run a single test (example path):
     - python manage.py test users.tests.TestUserAuth.test_login_flow
+  - Auto-finalize past-deadline lowest-bid deals (management command):
+    - python manage.py auto_finalize_deals
+    - Schedule periodically (e.g., cron/Task Scheduler) to run every few minutes
 
 - Frontend styles (Tailwind CSS)
   - Install JS dependencies (required for CLI-based builds):
